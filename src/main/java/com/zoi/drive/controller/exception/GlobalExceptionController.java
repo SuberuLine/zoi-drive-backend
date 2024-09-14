@@ -16,7 +16,7 @@ public class GlobalExceptionController {
 
     @ExceptionHandler(RuntimeException.class)
     public Result<String> handleRuntimeException(RuntimeException e) {
-        log.warn("Resolve [{}, {}]", e.getCause(), e.getMessage());
+        log.warn("Resolved [{}, {}]", e.getCause(), e.getMessage());
         return Result.failure(500, e.getMessage());
     }
 
