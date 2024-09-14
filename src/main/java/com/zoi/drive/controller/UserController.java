@@ -3,8 +3,11 @@ package com.zoi.drive.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
+import com.zoi.drive.entity.dto.UserDetail;
 import com.zoi.drive.entity.vo.response.UserInfoVO;
-import com.zoi.drive.service.AccountService;
+import com.zoi.drive.service.IAccountService;
+import com.zoi.drive.service.IUserCheckinService;
+import com.zoi.drive.service.IUserDetailService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,12 +23,27 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @Resource
-    private AccountService accountService;
+    private IAccountService accountService;
+
+    @Resource
+    private IUserCheckinService checkinService;
+
+    @Resource
+    private IUserDetailService userDetailService;
 
     @GetMapping("info")
     public Result<UserInfoVO> getUserInfo() {
         Account account = accountService.getById(StpUtil.getLoginIdAsInt());
-        return Result.success(account.asViewObject(UserInfoVO.class));
+        UserInfoVO userInfoVO = account.asViewObject(UserInfoVO.class);
+        userInfoVO.setUserCheckin(checkinService.getById(account.getCheckin()));
+        userInfoVO.setUserDetail(userDetailService.getById(account.getDetails()));
+        return Result.success(userInfoVO);
+    }
+
+    @GetMapping("checkin")
+    public Result<String> checkin() {
+        Account account = accountService.getById(StpUtil.getLoginIdAsInt());
+        return checkinService.dailyCheckin(account);
     }
 
 }

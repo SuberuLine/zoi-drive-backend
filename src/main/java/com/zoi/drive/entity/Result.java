@@ -14,6 +14,10 @@ public record Result<T>(int code, T data, String message) {
         return success(null);
     }
 
+    public static <T> Result<T> success(T data, String message) {
+        return new Result<>(200, data, message);
+    }
+
     public static <T> Result<T> failure(int code, String message) {
         return new Result<>(code, null, message);
     }

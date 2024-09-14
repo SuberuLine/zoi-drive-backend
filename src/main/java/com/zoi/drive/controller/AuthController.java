@@ -1,13 +1,16 @@
 package com.zoi.drive.controller;
 
 import cn.dev33.satoken.secure.BCrypt;
+import cn.dev33.satoken.stp.SaLoginModel;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.vo.request.AuthRequestVO;
-import com.zoi.drive.service.AccountService;
+import com.zoi.drive.service.IAccountService;
+import com.zoi.drive.utils.DevicesUtil;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,23 +24,17 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Resource
-    private AccountService accountService;
-
-    @GetMapping("/check")
-    public Result<SaTokenInfo> check() {
-        SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-        if (tokenInfo.isLogin){
-            return Result.success(tokenInfo);
-        } else return Result.failure(401, "未登录");
-    }
+    private IAccountService accountService;
 
     @PostMapping("/login")
-    public Result<SaTokenInfo> login(@RequestBody AuthRequestVO vo) {
+    public Result<SaTokenInfo> login(@RequestBody AuthRequestVO vo, HttpServletRequest request) {
         Account currentLoginUser = accountService.findAccountByNameOrEmail(vo.getAccount());
+        String os = DevicesUtil.getOsName(request);
         if (currentLoginUser != null) {
             if (BCrypt.checkpw(vo.getPassword(), currentLoginUser.getPassword())) {
-                System.out.println(vo.getRemember());
-                StpUtil.login(currentLoginUser.getId(), vo.getRemember());
+                StpUtil.login(currentLoginUser.getId(), new SaLoginModel()
+                        .setDevice(os)
+                        .setIsLastingCookie(vo.getRemember()));
                 SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
                 return Result.success(tokenInfo);
             } else {
@@ -55,4 +52,15 @@ public class AuthController {
         }
         return Result.failure(401, "无效操作：未登录时尝试登出");
     }
+
+    @GetMapping("/getLoginQrCodeUrl")
+    public Result<String> getLoginQrCodeUrl() {
+        // 生成一个临时的登录令牌
+        String loginToken = "114514";
+        // 构建登录链接
+        String loginUrl = "https://your-app.com/login?token=" + loginToken;
+        return Result.success(loginUrl);
+    }
+
+
 }
