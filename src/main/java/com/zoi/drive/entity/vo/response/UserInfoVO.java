@@ -1,8 +1,11 @@
 package com.zoi.drive.entity.vo.response;
 
+import com.zoi.drive.entity.dto.UserCheckin;
+import com.zoi.drive.entity.dto.UserDetail;
 import lombok.Data;
 
 import java.sql.Date;
+import java.time.LocalDate;
 
 /**
  * @Description TODO
@@ -16,7 +19,8 @@ public class UserInfoVO {
     private String phone;
     private String avatar;
     private String role;
-    private String details;
-    private Date registerTime;
+    private LocalDate registerTime;
     private Boolean status;
+    private UserDetail userDetail;
+    private UserCheckin userCheckin;
 }

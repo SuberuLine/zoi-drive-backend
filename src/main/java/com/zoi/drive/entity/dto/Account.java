@@ -1,77 +1,65 @@
 package com.zoi.drive.entity.dto;
 
-import com.mybatisflex.annotation.ColumnMask;
-import com.mybatisflex.annotation.Id;
-import com.mybatisflex.annotation.KeyType;
-import com.mybatisflex.annotation.Table;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.sql.Date;
+import java.time.LocalDate;
 
-import com.mybatisflex.core.mask.Masks;
 import com.zoi.drive.entity.BaseData;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-import java.io.Serial;
+import lombok.Setter;
 
 /**
- * 用户账号表 实体类。
- *
- * @author Yuzoi
- * @since 2024-09-12
- */
-@Data
-@Builder
-@NoArgsConstructor
+* <p>
+* 用户账号表
+* </p>
+*
+* @author Yuzoi
+* @since 2024-09-14
+*/
+@Getter
+@Setter
+@TableName("db_account")
 @AllArgsConstructor
-@Table(value = "db_account")
+@NoArgsConstructor
+@Schema(name = "Account", description = "用户账号表")
 public class Account implements Serializable, BaseData {
 
-    @Serial
     private static final long serialVersionUID = 1L;
 
-    @Id(keyType = KeyType.Auto)
+    @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     private String username;
 
     private String password;
 
-    @ColumnMask(Masks.MOBILE)
     private String phone;
 
-    @ColumnMask(Masks.EMAIL)
     private String email;
 
-    /**
-     * 角色
-     */
+    @Schema(description = "角色")
     private String role;
 
-    /**
-     * 头像
-     */
+    @Schema(description = "头像")
     private String avatar;
 
-    /**
-     * 两步认证
-     */
+    @Schema(description = "两步认证")
     private String twoFactor;
 
-    /**
-     * 账号其他详细信息
-     */
+    @Schema(description = "账号其他详细信息")
     private Integer details;
 
-    /**
-     * 注册时间
-     */
-    private Date registerTime;
+    @Schema(description = "注册时间")
+    private LocalDate registerTime;
 
-    /**
-     * 帐号状态
-     */
+    @Schema(description = "帐号状态")
     private Boolean status;
 
+    @Schema(description = "签到")
+    private Integer checkin;
 }
