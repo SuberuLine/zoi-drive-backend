@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
 * <p>
@@ -42,29 +42,49 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
         UserDetail userDetail = userDetailMapper.selectById(account.getDetails());
         UserCheckin obj = userCheckinMapper.selectById(account.getCheckin());
         BigDecimal reward;
-        // 重复签到
-        if (DateUtils.isSameDay(obj.getLastCheckin(), new Date(System.currentTimeMillis()))) {
-            return Result.failure(403,"今日已签到");
-        }
-        // 连续签到逻辑
-        if (wasCheckedInYesterday(obj.getLastCheckin())) {
-            obj.setCheckinCount(obj.getCheckinCount() + 1);
-            obj.setCheckinConsecutive(obj.getCheckinConsecutive() + 1);
-            obj.setLastCheckin(new Date(System.currentTimeMillis()));
-            reward = generateRandomDecimal(10, 100);
-        } else {
-            // 断签逻辑
-            obj.setCheckinCount(obj.getCheckinCount() + 1);
+
+        Date lastCheckin = obj.getLastCheckin();
+        if (lastCheckin == null) {
+            obj.setCheckinCount(1);
             obj.setCheckinConsecutive(1);
             obj.setLastCheckin(new Date(System.currentTimeMillis()));
             reward = generateRandomDecimal(1, 80);
+        } else {
+            // 重复签到
+            if (DateUtils.isSameDay(obj.getLastCheckin(), new Date(System.currentTimeMillis()))) {
+                return Result.failure(403,"今日已签到");
+            }
+            // 连续签到逻辑
+            if (wasCheckedInYesterday(obj.getLastCheckin())) {
+                obj.setCheckinCount(obj.getCheckinCount() + 1);
+                obj.setCheckinConsecutive(obj.getCheckinConsecutive() + 1);
+                obj.setLastCheckin(new Date(System.currentTimeMillis()));
+                reward = generateRandomDecimal(10, 100);
+            } else {
+                // 断签逻辑
+                obj.setCheckinCount(obj.getCheckinCount() + 1);
+                obj.setCheckinConsecutive(1);
+                obj.setLastCheckin(new Date(System.currentTimeMillis()));
+                reward = generateRandomDecimal(1, 80);
+            }
         }
-        obj.setCheckinReward(obj.getCheckinReward().add(reward));
-        userDetail.setTotalStorage(userDetail.getTotalStorage().add(reward));
-        return userCheckinMapper.updateById(obj) > 0 && userDetailMapper.updateById(userDetail) > 0 ?
-                Result.success(reward + "M",
-                        "签到成功,已连续签到"+obj.getCheckinConsecutive()+"天"+"，奖励空间" + reward + "M") :
-                Result.failure(500,"签到失败");
+        obj.setCheckinReward(obj.getCheckinReward() != null ? obj.getCheckinReward().add(reward) : reward);
+        userDetail.setTotalStorage(userDetail.getTotalStorage() != null ? userDetail.getTotalStorage().add(reward) : reward);
+
+        try {
+            boolean checkinUpdated = userCheckinMapper.updateById(obj) > 0;
+            boolean detailUpdated = userDetailMapper.updateById(userDetail) > 0;
+            if (checkinUpdated && detailUpdated) {
+                return Result.success(reward + "M",
+                        "签到成功,已连续签到" + obj.getCheckinConsecutive() + "天" + "，奖励空间" + reward + "M");
+            } else {
+                return Result.failure(500, "签到失败");
+            }
+        } catch (Exception e) {
+            // 记录异常日志
+            log.error("签到过程中发生异常：", e);
+            return Result.failure(500, "签到失败");
+        }
     }
 
     /**
@@ -73,15 +93,18 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
      * @return T/F
      */
     private static boolean wasCheckedInYesterday(Date lastCheckin) {
+
+        if (lastCheckin == null) {
+            return false;
+        }
+
         Calendar lastDay = Calendar.getInstance();
         Calendar today = Calendar.getInstance();
         lastDay.setTime(lastCheckin);
         today.setTime(new Date());
 
-        if (lastDay.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
-                lastDay.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) - 1) {
-            return true;
-        } else return false;
+        return lastDay.get(Calendar.YEAR) == today.get(Calendar.YEAR) &&
+                lastDay.get(Calendar.DAY_OF_YEAR) == today.get(Calendar.DAY_OF_YEAR) - 1;
     }
 
     /**
@@ -92,9 +115,8 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
      * @return 生成的BigDecimal类型的随机数
      */
     private static BigDecimal generateRandomDecimal(int min, int max) {
-        Random random = new Random();
-        int intValue = random.nextInt(max - min) + min;
-        int fractionValue = random.nextInt(100);
+        int intValue = ThreadLocalRandom.current().nextInt(max - min) + min;
+        int fractionValue = ThreadLocalRandom.current().nextInt(100);
 
         BigDecimal decimalValue = new BigDecimal(intValue + "." + fractionValue);
         return decimalValue.setScale(2, RoundingMode.HALF_UP);

@@ -8,7 +8,9 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -21,6 +23,8 @@ import lombok.Setter;
 */
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @TableName("db_user_checkin")
 @Schema(name = "UserCheckin", description = "")
 public class UserCheckin implements Serializable {

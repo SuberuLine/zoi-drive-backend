@@ -4,13 +4,16 @@ import cn.dev33.satoken.secure.BCrypt;
 import cn.dev33.satoken.stp.SaLoginModel;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.temp.SaTempUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.vo.request.AuthRequestVO;
+import com.zoi.drive.entity.vo.request.RegisterVO;
 import com.zoi.drive.service.IAccountService;
 import com.zoi.drive.utils.DevicesUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -44,6 +47,26 @@ public class AuthController {
         return Result.failure(400, "无此用户，请检查你的用户名或邮箱是否正确！");
     }
 
+    @PostMapping("/register")
+    public Result<String> register(@RequestBody @Valid RegisterVO vo, HttpServletRequest request) {
+        return accountService.register(vo, request.getRemoteHost());
+    }
+
+    @GetMapping("/confirm-register")
+    public Result<String> confirmRegister(@RequestParam("token") String token) {
+        RegisterVO vo = SaTempUtil.parseToken(token, RegisterVO.class);
+        if (vo != null) {
+            Account registerUser = accountService.createUser(vo);
+            if (registerUser != null) {
+                // 使用完临时token后删除
+                SaTempUtil.deleteToken(token);
+                return Result.success("注册成功，欢迎"+registerUser.getUsername());
+            }
+            return Result.failure(500, "注册失败，请联系管理员");
+        }
+        return Result.failure(500, "链接已过期或已使用");
+    }
+
     @RequestMapping("/logout")
     public Result<String> logout() {
         if (StpUtil.getTokenValue() != null) {
@@ -61,6 +84,5 @@ public class AuthController {
         String loginUrl = "https://your-app.com/login?token=" + loginToken;
         return Result.success(loginUrl);
     }
-
 
 }

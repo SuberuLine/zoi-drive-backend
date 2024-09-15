@@ -1,6 +1,7 @@
 package com.zoi.drive.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.vo.request.RegisterVO;
 
@@ -16,6 +17,7 @@ public interface IAccountService extends IService<Account> {
 
     Account findAccountByNameOrEmail(String text);
 
-    Account registerUser(RegisterVO vo);
+    Result<String> register(RegisterVO vo, String ip);
 
+    Account createUser(RegisterVO vo);
 }
