@@ -20,13 +20,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  * @Date 2024/9/12 22:24
  **/
 @Configuration
-public class SaTokenConfig implements WebMvcConfigurer {
+public class SaTokenConfiguration implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> {
                     SaRouter.match("/**")
-                            .notMatch("/swagger-ui/**")
-                            .notMatch("/api/auth/**")
+                            .notMatch("/api/auth/**","/swagger-ui/**")
                             .check(r -> StpUtil.checkLogin());
 
                     SaRouter.match("/user/**", r -> StpUtil.checkPermission(Const.DEFAULT_USER_ROLE));

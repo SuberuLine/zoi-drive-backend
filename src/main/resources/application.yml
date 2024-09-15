@@ -1,42 +1,7 @@
 spring:
-  application:
-    name: Drive
-  datasource:
-    url: jdbc:postgresql://localhost:5432/drive
-    username: postgres
-    password: 123456
+  profiles:
+    active: '@environment@'
   servlet:
     multipart:
-      max-request-size: 10240MB
-      max-file-size: 1000MB
-  data:
-    redis:
-      database: 1
-      host: 127.0.0.1
-      port: 6379
-      timeout: 10s
-      lettuce:
-        pool:
-          max-active: 200
-          max-wait: -1ms
-          max-idle: 10
-          min-idle: 0
-server:
-  port: 9088
-
-sa-token:
-  token-name: Token
-  # Token有效期：30天
-  timeout: 2592000
-  # 最低活动频率
-  active-timeout: -1
-  is-concurrent: false
-  is-share: true
-  token-style: uuid
-  is-log: true
-
-mybatis-plus:
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-    map-underscore-to-camel-case: true
-
+      max-file-size: 10MB
+      max-request-size: 10MB
