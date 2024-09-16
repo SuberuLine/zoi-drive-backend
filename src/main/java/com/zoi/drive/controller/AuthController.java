@@ -1,7 +1,5 @@
 package com.zoi.drive.controller;
 
-import cn.dev33.satoken.secure.BCrypt;
-import cn.dev33.satoken.stp.SaLoginModel;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.temp.SaTempUtil;
@@ -9,8 +7,8 @@ import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.vo.request.AuthRequestVO;
 import com.zoi.drive.entity.vo.request.RegisterVO;
+import com.zoi.drive.entity.vo.request.ResetPasswordVO;
 import com.zoi.drive.service.IAccountService;
-import com.zoi.drive.utils.DevicesUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -31,20 +29,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public Result<SaTokenInfo> login(@RequestBody AuthRequestVO vo, HttpServletRequest request) {
-        Account currentLoginUser = accountService.findAccountByNameOrEmail(vo.getAccount());
-        String os = DevicesUtil.getOsName(request);
-        if (currentLoginUser != null) {
-            if (BCrypt.checkpw(vo.getPassword(), currentLoginUser.getPassword())) {
-                StpUtil.login(currentLoginUser.getId(), new SaLoginModel()
-                        .setDevice(os)
-                        .setIsLastingCookie(vo.getRemember()));
-                SaTokenInfo tokenInfo = StpUtil.getTokenInfo();
-                return Result.success(tokenInfo);
-            } else {
-                return Result.failure(401, "密码错误");
-            }
-        }
-        return Result.failure(400, "无此用户，请检查你的用户名或邮箱是否正确！");
+        return accountService.login(vo, request);
     }
 
     @PostMapping("/register")
@@ -74,6 +59,17 @@ public class AuthController {
             return Result.success("已登出");
         }
         return Result.failure(401, "无效操作：未登录时尝试登出");
+    }
+
+    @GetMapping("/sendResetEmail")
+    public Result<String> sendReset(@RequestParam("email") String email,
+                                HttpServletRequest request){
+        return accountService.resetPassword(email, request.getRemoteHost());
+    }
+
+    @PostMapping("/resetPassword")
+    public Result<String> resetPassword(@RequestBody @Valid ResetPasswordVO vo) {
+        return accountService.confirmReset(vo);
     }
 
     @GetMapping("/getLoginQrCodeUrl")

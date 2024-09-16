@@ -10,9 +10,7 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
-import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -35,11 +33,16 @@ public class MailQueueListener {
     String username;
 
     @RabbitHandler
-    public void sendMail(Map<String, Object> data) throws UnknownHostException {
+    public void sendMail(Map<String, Object> data) {
         String type = (String) data.get("type");
         String email = (String) data.get("email");
         String token = (String) data.get("token");
-        URL url = getClass().getClassLoader().getResource("static/register.html");
+        URL url = null;
+        if (type.equals("register")){
+            url = getClass().getClassLoader().getResource("static/register.html");
+        } else if (type.equals("reset")) {
+            url = getClass().getClassLoader().getResource("static/reset.html");
+        }
         String content = readString(url, Charset.defaultCharset().name());
         // 替换模板内的标记
         assert content != null;
@@ -47,7 +50,7 @@ public class MailQueueListener {
             case "register" -> sendRegisterEmail(content.replace("{{confirmRegister}}",
                     "http://localhost:9088/api/auth/confirm-register?token=" + token), email);
             case "reset" -> sendResetEmail(content.replace("{{confirmReset}}",
-                    "http://localhost:5173/"+token), email);
+                    "http://localhost:5173/reset_password?token="+token+"&email="+email), email);
             default -> log.error("未知邮件类型: {}", type);
         }
     }
