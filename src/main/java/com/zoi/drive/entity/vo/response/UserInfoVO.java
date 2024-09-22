@@ -2,10 +2,12 @@ package com.zoi.drive.entity.vo.response;
 
 import com.zoi.drive.entity.dto.UserCheckin;
 import com.zoi.drive.entity.dto.UserDetail;
+import com.zoi.drive.entity.dto.UserSetting;
 import lombok.Data;
 
 import java.sql.Date;
 import java.time.LocalDate;
+import java.util.List;
 
 /**
  * @Description TODO
@@ -15,12 +17,13 @@ import java.time.LocalDate;
 @Data
 public class UserInfoVO {
     private String username;
-    private String email;
     private String phone;
+    private String email;
     private String avatar;
-    private String role;
-    private LocalDate registerTime;
-    private Boolean status;
-    private UserDetail userDetail;
+    private List<String> role;
+    private String status;
     private UserCheckin userCheckin;
+    private UserDetail userDetail;
+    private UserSetting userSetting;
+    private LocalDate registerTime;
 }

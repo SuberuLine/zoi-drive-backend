@@ -3,11 +3,11 @@ package com.zoi.drive.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
-import com.zoi.drive.entity.dto.UserDetail;
 import com.zoi.drive.entity.vo.response.UserInfoVO;
 import com.zoi.drive.service.IAccountService;
 import com.zoi.drive.service.IUserCheckinService;
 import com.zoi.drive.service.IUserDetailService;
+import com.zoi.drive.service.IUserSettingService;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,12 +31,16 @@ public class UserController {
     @Resource
     private IUserDetailService userDetailService;
 
+    @Resource
+    private IUserSettingService settingService;
+
     @GetMapping("info")
     public Result<UserInfoVO> getUserInfo() {
         Account account = accountService.getById(StpUtil.getLoginIdAsInt());
         UserInfoVO userInfoVO = account.asViewObject(UserInfoVO.class);
         userInfoVO.setUserCheckin(checkinService.getById(account.getCheckin()));
         userInfoVO.setUserDetail(userDetailService.getById(account.getDetails()));
+        userInfoVO.setUserSetting(settingService.getById(account.getSettings()));
         return Result.success(userInfoVO);
     }
 

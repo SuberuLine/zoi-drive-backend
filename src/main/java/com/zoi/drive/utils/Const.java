@@ -19,5 +19,8 @@ public class Const {
 
     // 邮件验证码，用于存入redis
     public static final String TOKENIZED_EMAIL_DATA = "verify:email:data";
+
+    // 文件夹id，用于分类存储
+    public static final int FOLDER_AVATAR_ID = 0;
 }
 

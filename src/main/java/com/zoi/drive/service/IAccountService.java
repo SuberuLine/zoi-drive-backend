@@ -8,6 +8,7 @@ import com.zoi.drive.entity.vo.request.AuthRequestVO;
 import com.zoi.drive.entity.vo.request.RegisterVO;
 import com.zoi.drive.entity.vo.request.ResetPasswordVO;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 /**
 * <p>
@@ -30,4 +31,6 @@ public interface IAccountService extends IService<Account> {
     Result<String> confirmReset(ResetPasswordVO vo);
 
     Result<SaTokenInfo> login(AuthRequestVO vo, HttpServletRequest request);
+
+    Result<String> updateProfile(String type, @Valid String value);
 }
