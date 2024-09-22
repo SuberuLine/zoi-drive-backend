@@ -17,8 +17,8 @@ spring:
     password: test
   servlet:
     multipart:
-      max-request-size: 10240MB
-      max-file-size: 1000MB
+      max-request-size: -1
+      max-file-size: -1
   data:
     redis:
       database: 1
@@ -52,6 +52,7 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
+  type-handlers-package: com.zoi.drive.handler.type
 
 minio:
   endpoint: http://192.168.6.156:9000

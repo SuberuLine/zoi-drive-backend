@@ -1,12 +1,15 @@
 package com.zoi.drive.entity.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 
 import com.zoi.drive.entity.BaseData;
+import com.zoi.drive.handler.type.StringArrayTypeHandler;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -42,24 +45,30 @@ public class Account implements Serializable, BaseData {
 
     private String email;
 
-    @Schema(description = "角色")
-    private String role;
-
     @Schema(description = "头像")
     private String avatar;
 
-    @Schema(description = "两步认证")
-    private String twoFactor;
+    @Schema(description = "角色")
+    @TableField(typeHandler = StringArrayTypeHandler.class)
+    private List<String> role;
+
+    @Schema(description = "帐号状态")
+    private String status;
+
+    @Schema(description = "签到")
+    private Integer checkin;
 
     @Schema(description = "账号其他详细信息")
     private Integer details;
 
+    @Schema(description = "用户设置")
+    private Integer settings;
+
     @Schema(description = "注册时间")
     private LocalDate registerTime;
 
-    @Schema(description = "帐号状态")
-    private Boolean status;
+    @Schema(description = "是否删除")
+    private Boolean isDeleted;
 
-    @Schema(description = "签到")
-    private Integer checkin;
+
 }
