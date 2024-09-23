@@ -38,47 +38,34 @@ public class MailQueueListener {
         String email = (String) data.get("email");
         String token = (String) data.get("token");
         URL url = null;
-        if (type.equals("register")){
-            url = getClass().getClassLoader().getResource("static/register.html");
-        } else if (type.equals("reset")) {
-            url = getClass().getClassLoader().getResource("static/reset.html");
+        switch (type) {
+            case "register" -> url = getClass().getClassLoader().getResource("static/register.html");
+            case "reset" -> url = getClass().getClassLoader().getResource("static/reset.html");
+            case "delete" -> url = getClass().getClassLoader().getResource("static/delete.html");
+            default -> log.error("未知邮件类型: {}", type);
         }
         String content = readString(url, Charset.defaultCharset().name());
         // 替换模板内的标记
         assert content != null;
         switch (type) {
-            case "register" -> sendRegisterEmail(content.replace("{{confirmRegister}}",
+            case "register" -> sendFormatEmail("注册邮件", content.replace("{{confirmRegister}}",
                     "http://localhost:9088/api/auth/confirm-register?token=" + token), email);
-            case "reset" -> sendResetEmail(content.replace("{{confirmReset}}",
+            case "reset" -> sendFormatEmail("重置密码邮件", content.replace("{{confirmReset}}",
                     "http://localhost:5173/reset_password?token="+token+"&email="+email), email);
+            case "delete" -> sendFormatEmail("删除账户邮件", content.replace("{{confirmDelete}}",
+                    "http://localhost:9088/api/auth/confirm-delete?token="+token), email);
             default -> log.error("未知邮件类型: {}", type);
         }
     }
 
-
-    private void sendRegisterEmail(String content, String email) {
+    private void sendFormatEmail(String subject, String content, String email) {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper;
         try {
             mimeMessageHelper = new MimeMessageHelper(message, true);
             mimeMessageHelper.setFrom(username);
             mimeMessageHelper.setTo(email);
-            mimeMessageHelper.setSubject("注册邮件");
-            mimeMessageHelper.setText(content, true);
-            javaMailSender.send(message);
-        } catch (Exception e) {
-            log.error("邮件发送失败:", e);
-        }
-    }
-
-    private void sendResetEmail(String content, String email) {
-        MimeMessage message = javaMailSender.createMimeMessage();
-        MimeMessageHelper mimeMessageHelper;
-        try {
-            mimeMessageHelper = new MimeMessageHelper(message, true);
-            mimeMessageHelper.setFrom(username);
-            mimeMessageHelper.setTo(email);
-            mimeMessageHelper.setSubject("重置密码邮件");
+            mimeMessageHelper.setSubject(subject);
             mimeMessageHelper.setText(content, true);
             javaMailSender.send(message);
         } catch (Exception e) {

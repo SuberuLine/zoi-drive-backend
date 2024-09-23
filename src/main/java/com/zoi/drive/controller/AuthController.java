@@ -1,5 +1,6 @@
 package com.zoi.drive.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import cn.dev33.satoken.stp.SaTokenInfo;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.temp.SaTempUtil;
@@ -70,6 +71,16 @@ public class AuthController {
     @PostMapping("/resetPassword")
     public Result<String> resetPassword(@RequestBody @Valid ResetPasswordVO vo) {
         return accountService.confirmReset(vo);
+    }
+
+    @DeleteMapping("/delete")
+    public Result<String> deleteAccount() {
+        return accountService.sendDeleteEmail();
+    }
+
+    @GetMapping("/confirm-delete")
+    public Result<String> confirmDelete(@RequestParam("token") String token) {
+        return accountService.deleteAccount(token);
     }
 
     @GetMapping("/getLoginQrCodeUrl")

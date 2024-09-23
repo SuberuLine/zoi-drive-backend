@@ -53,6 +53,12 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
   type-handlers-package: com.zoi.drive.handler.type
+  global-config:
+    db-config:
+      # 逻辑删除相关配置
+      logic-delete-value: true
+      logic-not-delete-value: false
+      logic-delete-field: isDeleted
 
 minio:
   endpoint: http://192.168.6.156:9000

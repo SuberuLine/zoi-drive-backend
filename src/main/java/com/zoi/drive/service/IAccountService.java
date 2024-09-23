@@ -33,4 +33,8 @@ public interface IAccountService extends IService<Account> {
     Result<SaTokenInfo> login(AuthRequestVO vo, HttpServletRequest request);
 
     Result<String> updateProfile(String type, @Valid String value);
+
+    Result<String> deleteAccount(String token);
+
+    Result<String> sendDeleteEmail();
 }

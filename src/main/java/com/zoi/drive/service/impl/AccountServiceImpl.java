@@ -132,6 +132,39 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     @Override
+    public Result<String> deleteAccount(String token) {
+        Account account = SaTempUtil.parseToken(token, Account.class);
+        StpUtil.kickout(account.getId());
+        // 逻辑删除用户
+        if (this.removeById(account)) {
+            // TODO: 删除用户数据
+            SaTempUtil.deleteToken(token);
+            return Result.success("已删除用户");
+        }
+        return Result.failure(500, "删除失败");
+    }
+
+    @Override
+    public Result<String> sendDeleteEmail() {
+        Account account = this.getById(StpUtil.getLoginIdAsInt());
+        if (account != null) {
+            if (!flowLimitUtils.checkBeforeLimit(Const.VERIFY_EMAIL_LIMIT + account.getEmail() , 30,
+                    TimeUnit.SECONDS)) {
+                return Result.failure(429, "操作太频繁，请稍后30秒后再试");
+            }
+            String token = SaTempUtil.createToken(account, 600);
+            Map<String, Object> data = Map.of(
+                    "email", account.getEmail(),
+                    "type", "delete",
+                    "token", token
+            );
+            amqpTemplate.convertAndSend(Const.MQ_MAIL_QUEUE, data);
+            return Result.success("已发送删除用户验证邮件，请耐心等候");
+        }
+        return Result.failure(400, "查无此用户，请重新确认需找回的邮箱");
+    }
+
+    @Override
     public Result<String> register(RegisterVO vo, String ip) {
         String email = vo.getEmail();
         if (this.findAccountByNameOrEmail(email) != null)
@@ -215,6 +248,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         if (resetAccount != null && vo.getPassword() != null) {
             resetAccount.setPassword(BCrypt.hashpw(vo.getPassword(), BCrypt.gensalt()));
             if (this.saveOrUpdate(resetAccount)) {
+                SaTempUtil.deleteToken(vo.getToken());
                 return Result.success("重置密码成功");
             } else {
                 return Result.failure(500, "更新密码失败，请联系管理员");

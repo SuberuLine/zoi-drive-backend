@@ -2,6 +2,7 @@ package com.zoi.drive.entity.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -46,6 +47,7 @@ public class UserFile implements Serializable {
 
     private String storageUrl;
 
+    @TableLogic
     private Boolean isDeleted;
 
     private LocalDateTime uploadAt;
