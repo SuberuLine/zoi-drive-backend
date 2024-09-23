@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.vo.response.UserInfoVO;
+import com.zoi.drive.entity.vo.response.UserSettingVO;
 import com.zoi.drive.service.IAccountService;
 import com.zoi.drive.service.IUserCheckinService;
 import com.zoi.drive.service.IUserDetailService;
@@ -40,7 +41,7 @@ public class UserController {
         UserInfoVO userInfoVO = account.asViewObject(UserInfoVO.class);
         userInfoVO.setUserCheckin(checkinService.getById(account.getCheckin()));
         userInfoVO.setUserDetail(userDetailService.getById(account.getDetails()));
-        userInfoVO.setUserSetting(settingService.getById(account.getSettings()));
+        userInfoVO.setUserSetting(settingService.getById(account.getSettings()).asViewObject(UserSettingVO.class));
         return Result.success(userInfoVO);
     }
 

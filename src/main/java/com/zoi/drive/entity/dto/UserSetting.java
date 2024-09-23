@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 
+import com.zoi.drive.entity.BaseData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,7 +26,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @TableName("db_user_setting")
 @Schema(name = "UserSetting", description = "")
-public class UserSetting implements Serializable {
+public class UserSetting implements Serializable, BaseData {
 
     private static final long serialVersionUID = 1L;
 

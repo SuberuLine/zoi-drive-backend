@@ -2,6 +2,10 @@ package com.zoi.drive.config;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.context.SaHolder;
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
+import cn.dev33.satoken.exception.NotRoleException;
+import cn.dev33.satoken.exception.SaTokenException;
 import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.router.SaHttpMethod;
@@ -9,8 +13,10 @@ import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.utils.Const;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -51,7 +57,19 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
 
                 // 异常处理函数：每次认证函数发生异常时执行此函数
                 .setError(e -> {
-                    return Result.failure(500, e.getMessage());
+                    SaManager.getLog().error("请求处理出错: " + e.getMessage(), e);
+                    if (e instanceof NotLoginException) {
+                        return Result.failure(401, "未登录或 token 无效: " + e.getMessage());
+                    } else if (e instanceof NotPermissionException) {
+                        return Result.failure(403, "无权限访问");
+                    } else if (e instanceof NotRoleException) {
+                        return Result.failure(403, "角色不符合要求");
+                    } else if (e instanceof SaTokenException) {
+                        return Result.failure(401, "认证错误: " + e.getMessage());
+                    } else if (e instanceof HttpRequestMethodNotSupportedException) {
+                        return Result.failure(405, "请求方法不支持");
+                    }
+                    return Result.failure(500, "服务器内部错误");
                 })
 
                 // 前置函数：在每次认证函数之前执行

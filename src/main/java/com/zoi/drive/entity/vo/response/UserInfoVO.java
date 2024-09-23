@@ -1,5 +1,6 @@
 package com.zoi.drive.entity.vo.response;
 
+import com.zoi.drive.entity.BaseData;
 import com.zoi.drive.entity.dto.UserCheckin;
 import com.zoi.drive.entity.dto.UserDetail;
 import com.zoi.drive.entity.dto.UserSetting;
@@ -24,6 +25,6 @@ public class UserInfoVO {
     private String status;
     private UserCheckin userCheckin;
     private UserDetail userDetail;
-    private UserSetting userSetting;
+    private UserSettingVO userSetting;
     private LocalDate registerTime;
 }

@@ -22,5 +22,8 @@ public class Const {
 
     // 文件夹id，用于分类存储
     public static final int FOLDER_AVATAR_ID = 0;
+
+    // 创建2FA缓存Secret
+    public static final String TWO_FACTOR_SECRET_KEY = "two_factor:secret:";
 }
 
