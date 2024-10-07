@@ -1,5 +1,7 @@
 package com.zoi.drive.utils;
 
+import java.nio.file.Paths;
+
 /**
  * @Description TODO
  * @Author Yuzoi
@@ -25,5 +27,8 @@ public class Const {
 
     // 创建2FA缓存Secret
     public static final String TWO_FACTOR_SECRET_KEY = "two_factor:secret:";
+
+    // 上传后暂存文件夹路径
+    public static final String UPLOAD_FOLDER = Paths.get("src/main/resources/upload").toAbsolutePath().toString();
 }
 

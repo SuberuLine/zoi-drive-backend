@@ -1,14 +1,15 @@
 package com.zoi.drive.controller;
 
 import com.zoi.drive.entity.Result;
+import com.zoi.drive.entity.vo.response.FileItemVO;
+import com.zoi.drive.service.IUserFileService;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * @Description TODO
@@ -20,24 +21,24 @@ import java.io.File;
 @Slf4j
 public class FileController {
 
-    private final String uploadDir = "C:\\Users\\Administrator\\Desktop\\drive-web";
+    @Resource
+    private IUserFileService userFileService;
 
-    @PostMapping("/user/upload")
-    public Result<String> upload(@RequestParam("file") MultipartFile[] files) {
-        for (MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();  // 文件名
-            File dest = new File(uploadDir + '/' + fileName);
-            if (!dest.getParentFile().exists()) {
-                dest.getParentFile().mkdirs();
-            }
-            try {
-                file.transferTo(dest);
-            } catch (Exception e) {
-                log.error("{}", e);
-                return Result.failure(500, "文件上传失败");
-            }
-        }
-        return Result.success("文件上传成功");
+    @PostMapping("/file/list")
+    public Result<List<FileItemVO>> fileList() {
+        return userFileService.listUserFiles();
     }
 
+    @PostMapping("/file/upload")
+    public Result<String> upload(@RequestParam("file") MultipartFile[] files) throws IOException {
+        for (MultipartFile file : files) {
+            log.info("{} {} {}", file.getOriginalFilename(), file.getContentType(), file.getSize());
+        }
+        return userFileService.manualUpload(files);
+    }
+
+    @GetMapping("/file/check")
+    public Result<String> check(@RequestParam("hash") String hash) {
+        return userFileService.checkFileHash(hash);
+    }
 }

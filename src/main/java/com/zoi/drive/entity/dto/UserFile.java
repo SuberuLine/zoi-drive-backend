@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,7 +51,7 @@ public class UserFile implements Serializable {
     @TableLogic
     private Boolean isDeleted;
 
-    private LocalDateTime uploadAt;
+    private Date uploadAt;
 
-    private LocalDateTime viewedAt;
+    private Date viewedAt;
 }

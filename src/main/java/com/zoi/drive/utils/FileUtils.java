@@ -3,6 +3,7 @@ package com.zoi.drive.utils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -46,6 +47,44 @@ public class FileUtils {
         } catch (Exception e) {
             log.error("处理文件类型时出现异常:", e);
         }
+        if (type == null) {
+            type = "application/octet-stream";
+        }
         return type;
+    }
+
+    // 获取后缀
+    public static String getExtension(String filename) {
+        if (filename == null || filename.isBlank() || !filename.contains(".")) {
+            return null;
+        }
+        return filename.substring(filename.lastIndexOf(".") + 1);
+    }
+
+    // 去除后缀
+    public static String removeExtension(String filename) {
+        if (filename == null || filename.isBlank() || !filename.contains(".")) {
+            return null;
+        }
+        int lastIndex = filename.lastIndexOf('.');
+        return (lastIndex == -1) ? filename : filename.substring(0, lastIndex);
+    }
+
+    // 计算etag
+    public static String calculateETag(String filePath) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("MD5");
+        try (InputStream is = new FileInputStream(filePath)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                md.update(buffer, 0, read);
+            }
+        }
+        byte[] digest = md.digest();
+        StringBuilder sb = new StringBuilder();
+        for (byte b : digest) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
     }
 }
