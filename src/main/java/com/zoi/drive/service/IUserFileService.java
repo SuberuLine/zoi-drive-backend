@@ -3,11 +3,9 @@ package com.zoi.drive.service;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.zoi.drive.entity.vo.response.FileItemVO;
 import jakarta.servlet.ServletOutputStream;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
@@ -26,7 +24,7 @@ public interface IUserFileService extends IService<UserFile> {
 
     String uploadAvatar(MultipartFile file) throws Exception;
 
-    Result<List<FileItemVO>> listUserFiles();
+    List<UserFile> listUserFiles();
 
     Result<String> manualUpload(MultipartFile[] files) throws IOException;
 

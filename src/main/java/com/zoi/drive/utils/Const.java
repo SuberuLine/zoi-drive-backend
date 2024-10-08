@@ -1,5 +1,7 @@
 package com.zoi.drive.utils;
 
+import cn.dev33.satoken.stp.StpUtil;
+
 import java.nio.file.Paths;
 
 /**
@@ -29,6 +31,8 @@ public class Const {
     public static final String TWO_FACTOR_SECRET_KEY = "two_factor:secret:";
 
     // 上传后暂存文件夹路径
-    public static final String UPLOAD_FOLDER = Paths.get("src/main/resources/upload").toAbsolutePath().toString();
+    public static final String USER_UPLOAD_FOLDER = "/main/" + StpUtil.getLoginIdAsString() + "/";
+
+    public static final String FILE_MERGE_LOCK = "lock:file_merge:";
 }
 

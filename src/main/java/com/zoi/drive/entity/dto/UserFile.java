@@ -42,7 +42,7 @@ public class UserFile implements Serializable {
 
     private String type;
 
-    private Double size;
+    private long size;
 
     private String hash;
 

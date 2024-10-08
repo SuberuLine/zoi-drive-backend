@@ -7,10 +7,11 @@ import java.util.List;
 
 @Data
 public class FileItemVO {
-    String name;
-    Boolean isFolder;
-    String type;
-    String size;
-    Date modifiedDate;
-    List<FileItemVO> children;
+    private String key;
+    private String name;
+    private Boolean isFolder;
+    private String type;
+    private String size;
+    private Date updateAt;
+    private List<FileItemVO> children;
 }
