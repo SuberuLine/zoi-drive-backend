@@ -52,7 +52,7 @@ public class UserFileChunkServiceImpl extends ServiceImpl<UserFileChunkMapper, U
     @Transactional
     public void uploadChunk(MultipartFile file, String hash, int chunk, int chunks, Integer folderId) throws IOException {
         // 格式化分片名
-        String chunkObjectName = String.format("/temp/%d/%s/chunk_%d", StpUtil.getLoginIdAsInt(), hash, chunk);
+        String chunkObjectName = String.format("temp/%d/%s/chunk_%d", StpUtil.getLoginIdAsInt(), hash, chunk);
 
         try (InputStream inputStream = file.getInputStream()) {
 

@@ -1,17 +1,21 @@
 package com.zoi.drive.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.dto.UserFile;
+import com.zoi.drive.entity.dto.UserFolder;
 import com.zoi.drive.mapper.AccountMapper;
 import com.zoi.drive.mapper.UserFileMapper;
+import com.zoi.drive.mapper.UserFolderMapper;
 import com.zoi.drive.service.IUserFileService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zoi.drive.utils.Const;
 import com.zoi.drive.utils.FileUtils;
 import io.minio.*;
+import io.minio.http.Method;
 import jakarta.annotation.Resource;
 import jakarta.servlet.ServletOutputStream;
 import org.apache.commons.compress.utils.IOUtils;
@@ -23,6 +27,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -41,6 +46,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     AccountMapper accountMapper;
+
+    @Resource
+    private UserFolderMapper userFolderMapper;
 
     @Value("${minio.bucket}")
     String bucketName;
@@ -103,7 +111,10 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Override
     public List<UserFile> listUserFiles() {
-        return this.query().eq("account_id", StpUtil.getLoginIdAsInt()).list();
+        return this.query()
+                .eq("account_id", StpUtil.getLoginIdAsInt())
+                .ge("folder_id", Const.FOLDER_ROOT_ID)
+                .list();
     }
 
     @Override
@@ -145,5 +156,42 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         } else {
             return Result.success();
         }
+    }
+
+    @Override
+    public Result<String> move(Integer id, Integer folderId) {
+        UserFolder targetFolder = userFolderMapper.selectOne(
+                new QueryWrapper<>(UserFolder.class)
+                        .eq("account_id", StpUtil.getLoginIdAsInt())
+                        .eq("id", folderId));
+        if (targetFolder != null || Objects.equals(folderId, Const.FOLDER_ROOT_ID)) {
+            return Result.success(this.update()
+                    .eq("id", id).set("folder_id", folderId).update() ? "移动成功" : "移动失败");
+        }
+        return Result.failure(500, "目标文件夹不存在");
+    }
+
+    /**
+     * 获取文件的预签名下载 URL
+     * @param file File 对象
+     * @return 预签名下载 URL
+     * @throws Exception
+     */
+    @Override
+    public Result<String> getPreSignedLink(UserFile file) throws Exception {
+        String preSignedUrl = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.GET)
+                        .bucket(bucketName)
+                        .object(file.getStorageUrl())
+                        .expiry(60) // URL 有效期（秒）
+                        .build()
+        );
+
+        if (preSignedUrl == null || preSignedUrl.isEmpty()) {
+            throw new RuntimeException("生成下载链接失败");
+        }
+
+        return Result.success(preSignedUrl);
     }
 }

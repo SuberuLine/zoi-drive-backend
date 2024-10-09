@@ -1,5 +1,6 @@
 package com.zoi.drive.controller;
 
+import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
@@ -40,16 +41,14 @@ public class FileController {
     @Resource
     private IUserFileChunkService userFileChunkService;
 
-    @PostMapping("/file/list")
+    @GetMapping("/file/list")
     public Result<List<FileItemVO>> fileList() {
         List<UserFile> userFileList = userFileService.listUserFiles();
         List<UserFolder> userFolderList = userFolderService.listUserFolders();
         List<FileItemVO> fileListView = new ArrayList<>();
 
-        // 存储文件夹 ID 和对应的 FileItemVO
         Map<Integer, FileItemVO> folderMap = new HashMap<>();
 
-        // 首先处理文件夹
         for (UserFolder folder : userFolderList) {
             FileItemVO folderVO = new FileItemVO();
             folderVO.setKey(String.valueOf(folder.getId()));
@@ -57,22 +56,27 @@ public class FileController {
             folderVO.setIsFolder(true);
             folderVO.setType("folder");
             folderVO.setSize("-");
-            folderVO.setUpdateAt(folder.getCreatedAt());
+            folderVO.setUploadAt(folder.getCreatedAt());
             folderVO.setChildren(new ArrayList<>());
 
             folderMap.put(folder.getId(), folderVO);
+        }
 
+        for (UserFolder folder : userFolderList) {
             if (folder.getParentId() == null) {
-                fileListView.add(folderVO);
+                fileListView.add(folderMap.get(folder.getId()));
             } else {
                 FileItemVO parentFolder = folderMap.get(folder.getParentId());
                 if (parentFolder != null) {
-                    parentFolder.getChildren().add(folderVO);
+                    parentFolder.getChildren().add(folderMap.get(folder.getId()));
+                } else {
+                    // 如果父文件夹不存在，将此文件夹添加到顶层
+                    fileListView.add(folderMap.get(folder.getId()));
                 }
             }
         }
 
-        // 然后处理文件
+        // 处理文件
         for (UserFile file : userFileList) {
             FileItemVO fileVO = new FileItemVO();
             fileVO.setKey(String.valueOf(file.getId()));
@@ -80,7 +84,7 @@ public class FileController {
             fileVO.setIsFolder(false);
             fileVO.setType(file.getType());
             fileVO.setSize(formatFileSize(file.getSize()));
-            fileVO.setUpdateAt(file.getUploadAt());
+            fileVO.setUploadAt(file.getUploadAt());
 
             FileItemVO parentFolder = folderMap.get(file.getFolderId());
             if (parentFolder != null) {
@@ -94,7 +98,6 @@ public class FileController {
     }
 
 
-
     @PostMapping("/file/upload")
     public Result<String> upload(@RequestParam("file") MultipartFile[] files) throws IOException {
         for (MultipartFile file : files) {
@@ -103,9 +106,48 @@ public class FileController {
         return userFileService.manualUpload(files);
     }
 
+    @GetMapping("/file/move")
+    public Result<String> move(@RequestParam("fileId") Integer fileId,
+                               @RequestParam("targetFolderId") Integer targetFolderId) {
+        return userFileService.move(fileId, targetFolderId);
+    }
+
+    @GetMapping("/file/create-folder")
+    public Result<UserFolder> createFolder(@RequestParam("parentFolderId") Integer parentFolderId,
+                                       @RequestParam("folderName") String folderName) {
+        return userFolderService.createFolder(parentFolderId, folderName);
+    }
+
     @GetMapping("/file/check")
     public Result<String> check(@RequestParam("hash") String hash) {
         return userFileService.checkFileHash(hash);
+    }
+
+    @GetMapping("/file/{fileId}/pre-signed-link")
+    public Result<String> getPreSignedLink(@PathVariable("fileId") Integer fileId) {
+        UserFile file = userFileService.getById(fileId);
+        if (file == null) {
+            return Result.failure(500, "文件不存在");
+        }
+        if (file.getAccountId() != StpUtil.getLoginIdAsInt()) {
+            return Result.failure(500, "无该文件访问权限！");
+        }
+        try {
+            return userFileService.getPreSignedLink(file);
+        } catch (Exception e) {
+            return Result.failure(500, "获取预签名链接失败");
+        }
+    }
+
+    @DeleteMapping("/file/{fileId}/delete")
+    public Result<String> delete(@PathVariable("fileId") Integer fileId) {
+        UserFile removeObj = userFileService.getById(fileId);
+        if (removeObj == null) return Result.failure(500, "文件不存在");
+        if (removeObj.getAccountId() != StpUtil.getLoginIdAsInt()) return Result.failure(500, "无权限操作");
+        if (userFileService.removeById(fileId)) {
+            return Result.success("删除成功");
+        }
+        return Result.failure(500, "删除失败，请联系管理员");
     }
 
     @PostMapping("/file/upload/chunk")

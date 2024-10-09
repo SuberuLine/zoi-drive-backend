@@ -12,6 +12,6 @@ public class FileItemVO {
     private Boolean isFolder;
     private String type;
     private String size;
-    private Date updateAt;
+    private Date uploadAt;
     private List<FileItemVO> children;
 }

@@ -29,4 +29,8 @@ public interface IUserFileService extends IService<UserFile> {
     Result<String> manualUpload(MultipartFile[] files) throws IOException;
 
     Result<String> checkFileHash(String hash);
+
+    Result<String> move(Integer id, Integer folderId);
+
+    Result<String> getPreSignedLink(UserFile file) throws Exception;
 }

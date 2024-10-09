@@ -51,7 +51,9 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
 
                 // 认证函数: 每次请求执行
                 .setAuth(obj -> {
-                    SaManager.getLog().debug("请求path={}  提交token={}", SaHolder.getRequest().getRequestPath(), StpUtil.getTokenValue());
+                    SaManager.getLog().debug("请求path={} 参数={} 提交token={}",
+                            SaHolder.getRequest().getRequestPath(),SaHolder.getRequest().getParamMap()
+                            , StpUtil.getTokenValue());
                     // ...
                 })
 

@@ -11,7 +11,7 @@ class DriveBackendApplicationTests {
 
     @Test
     void contextLoads() {
-        System.out.println(FileUtils.getMimeType("abc.sql"));
+        System.out.println(FileUtils.getMimeType(""));
     }
 
 }
