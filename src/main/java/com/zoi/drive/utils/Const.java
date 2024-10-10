@@ -19,6 +19,9 @@ public class Const {
     // 邮件消息队列
     public static final String MQ_MAIL_QUEUE = "mail";
 
+    // 离线/磁力下载消息队列
+    public static final String MQ_DOWNLOAD_QUEUE = "download";
+
     // 邮件验证码，用于存入redis
     public static final String TOKENIZED_EMAIL_DATA = "verify:email:data";
 

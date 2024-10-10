@@ -8,6 +8,7 @@ import com.zoi.drive.entity.vo.response.FileItemVO;
 import com.zoi.drive.service.IUserFileChunkService;
 import com.zoi.drive.service.IUserFileService;
 import com.zoi.drive.service.IUserFolderService;
+import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -137,6 +138,18 @@ public class FileController {
         } catch (Exception e) {
             return Result.failure(500, "获取预签名链接失败");
         }
+    }
+
+    @GetMapping("/file/download-magnet")
+    public Result<String> downloadMagnetLink(@RequestParam("magnet") String magnetLink) {
+        if (!RegexUtils.isMagnet(magnetLink)) return Result.failure(500, "非法的magnet格式");
+        return userFileService.downloadMagnetLink(magnetLink);
+    }
+
+    @GetMapping("/file/offline-download")
+    public Result<String> offlineDownload(@RequestParam("link") String offlineDownloadLink) {
+
+        return userFileService.offlineDownload(offlineDownloadLink);
     }
 
     @DeleteMapping("/file/{fileId}/delete")

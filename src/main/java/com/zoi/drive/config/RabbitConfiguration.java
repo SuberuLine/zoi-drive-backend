@@ -26,4 +26,11 @@ public class RabbitConfiguration {
                 .durable()
                 .build();
     }
+
+    @Bean("downloadQueue")
+    public Queue downloadQueue() {
+        return QueueBuilder
+                .durable()
+                .build();
+    }
 }

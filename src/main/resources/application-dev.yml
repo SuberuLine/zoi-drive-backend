@@ -2,7 +2,7 @@ spring:
   application:
     name: zoi-drive
   datasource:
-    url: jdbc:postgresql://localhost:5432/drive
+    url: jdbc:postgresql://192.168.6.156:5432/drive
     username: postgres
     password: 123456
   rabbitmq:
@@ -61,6 +61,11 @@ mybatis-plus:
       logic-delete-field: isDeleted
 
 minio:
-  endpoint: http://192.168.6.156:9000
+  endpoint: http://localhost:9000
   accessKey: minioadmin
   secretKey: minioadmin
+  bucket: zoi-drive-system
+
+aria:
+  url: http://localhost:16800/jsonrpc
+  secret: zoidrive

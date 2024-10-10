@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
+import com.zoi.drive.entity.dto.UserDownloadTask;
 import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
 import com.zoi.drive.mapper.AccountMapper;
+import com.zoi.drive.mapper.UserDownloadTaskMapper;
 import com.zoi.drive.mapper.UserFileMapper;
 import com.zoi.drive.mapper.UserFolderMapper;
 import com.zoi.drive.service.IUserFileService;
@@ -18,12 +20,23 @@ import io.minio.*;
 import io.minio.http.Method;
 import jakarta.annotation.Resource;
 import jakarta.servlet.ServletOutputStream;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.IOUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +51,7 @@ import java.util.UUID;
 * @author Yuzoi
 * @since 2024-09-20
 */
+@Slf4j
 @Service
 public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService {
 
@@ -50,8 +64,23 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     @Resource
     private UserFolderMapper userFolderMapper;
 
+    @Resource
+    UserDownloadTaskMapper userDownloadTaskMapper;
+
+    @Resource
+    RestTemplate restTemplate;
+
+    @Resource
+    AmqpTemplate amqpTemplate;
+
     @Value("${minio.bucket}")
     String bucketName;
+
+    @Value("${aria.url}")
+    String ariaRpcUrl;
+
+    @Value("${aria.secret}")
+    String ariaSecret;
 
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -103,7 +132,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                }
             }
         } catch (Exception e) {
-            log.error("上传失败:{}", e);
+            log.error("上传失败:", e);
             return null;
         }
         return null;
@@ -194,4 +223,40 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
         return Result.success(preSignedUrl);
     }
+
+    @Override
+    public Result<String> downloadMagnetLink(String magnetLink) {
+        String jsonBody = "{\"jsonrpc\":\"2.0\",\"id\":\"qwer\",\"method\":\"aria2.addUri\",\"params\":[\"token:" +
+                ariaSecret + "\",[\"" + magnetLink + "\"]]}";
+        log.info(jsonBody);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(ariaRpcUrl, request, String.class);
+            log.info(response.toString());
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return Result.success("添加任务成功");
+            } else {
+                return Result.failure(500, "添加任务失败");
+            }
+        } catch (Exception e) {
+            log.error("添加任务失败：", e);
+            return Result.failure(500, "添加任务失败");
+       }
+    }
+
+    @Override
+    public Result<String> offlineDownload(String offlineDownloadLink) {
+
+        String fileName = offlineDownloadLink.substring(offlineDownloadLink.lastIndexOf("/") + 1);
+        UserDownloadTask task = new UserDownloadTask(null, StpUtil.getLoginIdAsInt(), offlineDownloadLink,
+                "http", null, "pending", new Date(), null, null, 0);
+        //userDownloadTaskMapper.insert(task);
+        amqpTemplate.convertAndSend(Const.MQ_DOWNLOAD_QUEUE, task);
+        // todo 上传minio
+        return Result.success("下载成功");
+    }
+
 }

@@ -33,4 +33,8 @@ public interface IUserFileService extends IService<UserFile> {
     Result<String> move(Integer id, Integer folderId);
 
     Result<String> getPreSignedLink(UserFile file) throws Exception;
+
+    Result<String> downloadMagnetLink(String magnetLink);
+
+    Result<String> offlineDownload(String offlineDownloadLink);
 }
