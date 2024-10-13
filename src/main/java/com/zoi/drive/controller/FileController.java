@@ -7,7 +7,6 @@ import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
 import com.zoi.drive.entity.vo.response.FileItemVO;
 import com.zoi.drive.service.IUserFileService;
-import com.zoi.drive.service.UserFileChunkService;
 import com.zoi.drive.service.IUserFolderService;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
@@ -39,9 +38,6 @@ public class FileController {
 
     @Resource
     private IUserFolderService userFolderService;
-
-    @Resource
-    private UserFileChunkService userFileChunkService;
 
     @GetMapping("/file/list")
     public Result<List<FileItemVO>> fileList() {
@@ -174,7 +170,7 @@ public class FileController {
                                       @RequestParam("chunks") int chunks,
                                       @RequestParam("folderId") Integer folderId) {
         try {
-            userFileChunkService.uploadChunk(file, hash, chunk, chunks, folderId);
+            userFileService.uploadChunk(file, hash, chunk, chunks, folderId);
             return Result.success("分片上传成功");
         } catch (Exception e) {
             log.error(e.getMessage());

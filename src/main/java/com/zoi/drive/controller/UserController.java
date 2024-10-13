@@ -51,4 +51,9 @@ public class UserController {
         return checkinService.dailyCheckin(account);
     }
 
+    @GetMapping("recent-activities")
+    public Result<String> recentActivities() {
+        return Result.success("");
+    }
+
 }

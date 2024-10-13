@@ -28,6 +28,8 @@ public interface IUserFileService extends IService<UserFile> {
 
     Result<String> manualUpload(MultipartFile[] files) throws IOException;
 
+    void uploadChunk(MultipartFile file, String hash, int chunk, int chunks, Integer folderId) throws IOException;
+
     Result<String> checkFileHash(String hash);
 
     Result<String> move(Integer id, Integer folderId);

@@ -4,14 +4,8 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zoi.drive.entity.Result;
-import com.zoi.drive.entity.dto.Account;
-import com.zoi.drive.entity.dto.UserDownloadTask;
-import com.zoi.drive.entity.dto.UserFile;
-import com.zoi.drive.entity.dto.UserFolder;
-import com.zoi.drive.mapper.AccountMapper;
-import com.zoi.drive.mapper.UserDownloadTaskMapper;
-import com.zoi.drive.mapper.UserFileMapper;
-import com.zoi.drive.mapper.UserFolderMapper;
+import com.zoi.drive.entity.dto.*;
+import com.zoi.drive.mapper.*;
 import com.zoi.drive.service.IUserFileService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zoi.drive.utils.Const;
@@ -25,23 +19,23 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
 * <p>
@@ -55,23 +49,28 @@ import java.util.UUID;
 @Service
 public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> implements IUserFileService {
 
-    @Resource
-    MinioClient minioClient;
+    // 分片上传文件信息的缓存
+    private final ConcurrentHashMap<String, Chunks> chunkStore = new ConcurrentHashMap<>();
+    // 长度为5的定长线程池，用于处理异步任务
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
 
     @Resource
-    AccountMapper accountMapper;
+    private MinioClient minioClient;
+
+    @Resource
+    private AccountMapper accountMapper;
 
     @Resource
     private UserFolderMapper userFolderMapper;
 
     @Resource
-    UserDownloadTaskMapper userDownloadTaskMapper;
+    private UserFileOpsMapper userFileOpsMapper;
 
     @Resource
-    RestTemplate restTemplate;
+    private RestTemplate restTemplate;
 
     @Resource
-    AmqpTemplate amqpTemplate;
+    private AmqpTemplate amqpTemplate;
 
     @Value("${minio.bucket}")
     String bucketName;
@@ -177,6 +176,129 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return Result.success("文件上传成功！");
     }
 
+    /**
+     * 分片上传的处理
+     * @param file 分片文件
+     * @param hash 分片md5值
+     * @param chunk 当前分片
+     * @param chunks 总分片数量
+     * @param folderId 上传的文件夹id
+     * @throws IOException
+     */
+    @Override
+    @Transactional
+    public void uploadChunk(MultipartFile file, String hash, int chunk, int chunks, Integer folderId) throws IOException {
+        Integer userId = StpUtil.getLoginIdAsInt();
+        String key = userId + "-" + hash;
+        String chunkObjectName = String.format("temp/%d/%s/chunk_", StpUtil.getLoginIdAsInt(), hash);
+
+        try (InputStream inputStream = file.getInputStream()) {
+            minioClient.putObject(
+                    PutObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(chunkObjectName + chunk)
+                            .stream(inputStream, file.getSize(), -1)
+                            .build()
+            );
+
+            // compute原子操作，确保安全处理并发
+            chunkStore.compute(key, (k, v) -> {
+                // 如果为空，说明是第一个分片，创建新的Chunks对象
+                if (v == null) {
+                    v = new Chunks(hash, 0, chunks, chunkObjectName);
+                }
+                v.setCurrentChunk(v.getCurrentChunk() + 1);
+                return v;
+            });
+
+            log.debug("Chunk {} of {} uploaded successfully for hash: {}", chunk, chunks, hash);
+
+            if (chunkStore.get(key).getCurrentChunk().equals(chunkStore.get(key).getTotalChunks())) {
+                log.info("All chunks uploaded for hash: {}. Triggering merge operation.", hash);
+                UserFile uploadedFile = new UserFile(null, StpUtil.getLoginIdAsInt(), folderId, file.getOriginalFilename(),
+                        FileUtils.getMimeType(file.getOriginalFilename()), -1, hash, null, false,
+                        new Date(), null);
+                this.updateById(uploadedFile);
+                // 异步执行合并操作，避免阻塞上传过程
+                executorService.submit(() -> completeMerge(userId, key, uploadedFile));
+            }
+        } catch (Exception e) {
+            log.error("Failed to upload chunk {} for hash: {}", chunk, hash, e);
+            throw new IOException("上传分片失败", e);
+        }
+    }
+
+    /**
+     * 上传成功后合并分片
+     * @param userId 由于是异步调用，存在并发问题，需要使用用户id作为key
+     * @param key 分片缓存键
+     * @param uploadedFile 上传文件实体
+     */
+    private void completeMerge(Integer userId, String key, UserFile uploadedFile) {
+        Chunks chunks = chunkStore.get(key);
+        if (chunks == null) {
+            log.error("No chunks found for key: {}", key);
+            return;
+        }
+
+        String url = Const.USER_UPLOAD_FOLDER + uploadedFile.getFilename();
+
+        List<ComposeSource> sources = IntStream.range(0, chunks.getTotalChunks())
+                .mapToObj(i -> ComposeSource.builder()
+                        .bucket(bucketName)
+                        .object(chunks.getStorageUrl() + i)
+                        .build())
+                .collect(Collectors.toList());
+
+        try {
+            ObjectWriteResponse response = minioClient.composeObject(
+                    ComposeObjectArgs.builder()
+                            .bucket(bucketName)
+                            .object(url)
+                            .sources(sources)
+                            .build()
+            );
+
+            log.info("File merged successfully. ETag: {}", response.etag());
+
+            // 清理分片
+            for (int i = 0; i < chunks.getTotalChunks(); i++) {
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(chunks.getStorageUrl() + i)
+                                .build()
+                );
+            }
+
+            // 更新数据库
+            uploadedFile.setSize(getObjectSize(url));
+            uploadedFile.setStorageUrl(url);
+            this.saveOrUpdate(uploadedFile);
+            userFileOpsMapper.insert(new UserFileOps(null, userId, uploadedFile.getId(),
+                    "上传文件", new Date()));
+
+            chunkStore.remove(key);
+        } catch (Exception e) {
+            log.error("Error merging file chunks or updating database. Hash: {}", uploadedFile.getHash(), e);
+            // 考虑实现重试机制或通知管理员
+        }
+    }
+
+    /**
+     * 从Minio中获取文件大小
+     * @param objectName 文件名
+     * @return
+     */
+    private long getObjectSize(String objectName) {
+        try {
+            return minioClient.statObject(StatObjectArgs.builder().bucket(bucketName).object(objectName).build()).size();
+        } catch (Exception e){
+            log.error("获取文件大小失败: {}", e.getMessage());
+            return 0;
+        }
+    }
+
     @Override
     public Result<String> checkFileHash(String hash) {
         UserFile sameHashFile = this.query().eq("hash", hash).one();
@@ -208,20 +330,25 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
      */
     @Override
     public Result<String> getPreSignedLink(UserFile file) throws Exception {
-        String preSignedUrl = minioClient.getPresignedObjectUrl(
-                GetPresignedObjectUrlArgs.builder()
-                        .method(Method.GET)
-                        .bucket(bucketName)
-                        .object(file.getStorageUrl())
-                        .expiry(60) // URL 有效期（秒）
-                        .build()
-        );
+        try {
+            String preSignedUrl = minioClient.getPresignedObjectUrl(
+                    GetPresignedObjectUrlArgs.builder()
+                            .method(Method.GET)
+                            .bucket(bucketName)
+                            .object(file.getStorageUrl())
+                            .expiry(60) // URL 有效期（秒）
+                            .build()
+            );
 
-        if (preSignedUrl == null || preSignedUrl.isEmpty()) {
-            throw new RuntimeException("生成下载链接失败");
+            if (preSignedUrl == null || preSignedUrl.isEmpty()) {
+                return null;
+            }
+
+            return Result.success(preSignedUrl);
+        } catch (Exception e) {
+            log.error("获取预签名下载链接失败：", e);
+            return null;
         }
-
-        return Result.success(preSignedUrl);
     }
 
     @Override
