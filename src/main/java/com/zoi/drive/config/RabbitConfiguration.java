@@ -1,5 +1,6 @@
 package com.zoi.drive.config;
 
+import com.zoi.drive.utils.Const;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.core.QueueBuilder;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -23,14 +24,14 @@ public class RabbitConfiguration {
     @Bean("emailQueue")
     public Queue emailQueue() {
         return QueueBuilder
-                .durable()
+                .durable(Const.MQ_MAIL_QUEUE)
                 .build();
     }
 
     @Bean("downloadQueue")
     public Queue downloadQueue() {
         return QueueBuilder
-                .durable()
+                .durable(Const.MQ_DOWNLOAD_QUEUE)
                 .build();
     }
 }

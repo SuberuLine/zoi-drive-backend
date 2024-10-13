@@ -1,12 +1,13 @@
 package com.zoi.drive.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.zoi.drive.annotation.FileOpsLog;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
 import com.zoi.drive.entity.vo.response.FileItemVO;
-import com.zoi.drive.service.IUserFileChunkService;
 import com.zoi.drive.service.IUserFileService;
+import com.zoi.drive.service.UserFileChunkService;
 import com.zoi.drive.service.IUserFolderService;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
@@ -40,7 +41,7 @@ public class FileController {
     private IUserFolderService userFolderService;
 
     @Resource
-    private IUserFileChunkService userFileChunkService;
+    private UserFileChunkService userFileChunkService;
 
     @GetMapping("/file/list")
     public Result<List<FileItemVO>> fileList() {
@@ -107,6 +108,7 @@ public class FileController {
         return userFileService.manualUpload(files);
     }
 
+    @FileOpsLog(action = "移动文件")
     @GetMapping("/file/move")
     public Result<String> move(@RequestParam("fileId") Integer fileId,
                                @RequestParam("targetFolderId") Integer targetFolderId) {
@@ -124,6 +126,7 @@ public class FileController {
         return userFileService.checkFileHash(hash);
     }
 
+    @FileOpsLog(action = "预签名下载")
     @GetMapping("/file/{fileId}/pre-signed-link")
     public Result<String> getPreSignedLink(@PathVariable("fileId") Integer fileId) {
         UserFile file = userFileService.getById(fileId);
@@ -152,6 +155,7 @@ public class FileController {
         return userFileService.offlineDownload(offlineDownloadLink);
     }
 
+    @FileOpsLog(action = "删除文件")
     @DeleteMapping("/file/{fileId}/delete")
     public Result<String> delete(@PathVariable("fileId") Integer fileId) {
         UserFile removeObj = userFileService.getById(fileId);
@@ -168,7 +172,7 @@ public class FileController {
                                       @RequestParam("hash") String hash,
                                       @RequestParam("chunk") int chunk,
                                       @RequestParam("chunks") int chunks,
-                                      @RequestParam("folderId") Integer folderId) throws IOException {
+                                      @RequestParam("folderId") Integer folderId) {
         try {
             userFileChunkService.uploadChunk(file, hash, chunk, chunks, folderId);
             return Result.success("分片上传成功");
