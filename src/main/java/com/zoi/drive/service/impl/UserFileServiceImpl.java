@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.*;
+import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import com.zoi.drive.mapper.*;
 import com.zoi.drive.service.IUserFileService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -300,12 +301,41 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     }
 
     @Override
-    public Result<String> checkFileHash(String hash) {
-        UserFile sameHashFile = this.query().eq("hash", hash).one();
-        if (sameHashFile != null) {
-            return Result.success(sameHashFile.getFilename());
+    public Result<FileCheckResponseVO> checkFileHash(Integer folderId, String hash) {
+        // 获取当前登录用户的ID
+        Integer currentUserId = StpUtil.getLoginIdAsInt();
+
+        // 查找具有相同hash的文件
+        UserFile existingFile = this.query().eq("hash", hash)
+                .orderByAsc("id")
+                .last("LIMIT 1")
+                .one();
+
+        if (existingFile != null) {
+            if (existingFile.getAccountId().equals(currentUserId)) {
+                // 情况1：文件存在，且上传者是当前用户
+                return Result.success(new FileCheckResponseVO(true, existingFile.getFilename(), null));
+            } else {
+                // 情况2：文件存在，但上传者不是当前用户
+                // 创建新的UserFile对象，复制存储位置信息和hash
+                UserFile newFile = new UserFile();
+                newFile.setAccountId(currentUserId);
+                newFile.setFolderId(Objects.requireNonNullElse(folderId, 0)); // 可能需要根据实际情况调整
+                newFile.setFilename(existingFile.getFilename());
+                newFile.setType(existingFile.getType());
+                newFile.setSize(existingFile.getSize());
+                newFile.setHash(existingFile.getHash());
+                newFile.setStorageUrl(existingFile.getStorageUrl());
+                newFile.setUploadAt(new Date());
+
+                // 保存新文件记录
+                this.save(newFile);
+
+                return Result.success(new FileCheckResponseVO(true, newFile.getFilename(), newFile.getId()));
+            }
         } else {
-            return Result.success();
+            // 文件不存在
+            return Result.success(new FileCheckResponseVO(false, null, null));
         }
     }
 

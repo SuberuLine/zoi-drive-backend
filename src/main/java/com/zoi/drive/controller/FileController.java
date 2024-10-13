@@ -5,6 +5,7 @@ import com.zoi.drive.annotation.FileOpsLog;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
+import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import com.zoi.drive.entity.vo.response.FileItemVO;
 import com.zoi.drive.service.IUserFileService;
 import com.zoi.drive.service.IUserFolderService;
@@ -118,8 +119,9 @@ public class FileController {
     }
 
     @GetMapping("/file/check")
-    public Result<String> check(@RequestParam("hash") String hash) {
-        return userFileService.checkFileHash(hash);
+    public Result<FileCheckResponseVO> check( @RequestParam(value = "folderId", required = false) Integer folderId,
+                                              @RequestParam("hash") String hash) {
+        return userFileService.checkFileHash(folderId, hash);
     }
 
     @FileOpsLog(action = "预签名下载")

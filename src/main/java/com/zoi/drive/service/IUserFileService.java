@@ -3,6 +3,7 @@ package com.zoi.drive.service;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import jakarta.servlet.ServletOutputStream;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,7 +31,7 @@ public interface IUserFileService extends IService<UserFile> {
 
     void uploadChunk(MultipartFile file, String hash, int chunk, int chunks, Integer folderId) throws IOException;
 
-    Result<String> checkFileHash(String hash);
+    Result<FileCheckResponseVO> checkFileHash(Integer folderId, String hash);
 
     Result<String> move(Integer id, Integer folderId);
 
