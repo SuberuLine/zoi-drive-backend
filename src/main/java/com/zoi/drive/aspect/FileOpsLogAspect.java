@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.annotation.FileOpsLog;
 import com.zoi.drive.entity.dto.UserFileOps;
 import com.zoi.drive.mapper.UserFileOpsMapper;
+import com.zoi.drive.utils.Const;
 import jakarta.annotation.Resource;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -41,6 +42,7 @@ public class FileOpsLogAspect {
         userFileOps.setFileId((Integer) args[0]);
         userFileOps.setAction(action);
         userFileOps.setCreatedAt(new Date());
+        userFileOps.setUuid(Const.OPS_UUID);
         userFileOpsMapper.insert(userFileOps);
     }
 }

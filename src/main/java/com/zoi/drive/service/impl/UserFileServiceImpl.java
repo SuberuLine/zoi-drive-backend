@@ -15,10 +15,13 @@ import io.minio.*;
 import io.minio.http.Method;
 import jakarta.annotation.Resource;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -35,6 +41,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -72,6 +79,12 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     private AmqpTemplate amqpTemplate;
+
+    @Resource
+    private RedisTemplate<String, UserFile> redisTemplate;
+
+    @Value("${server.system.endpoint}")
+    String serverEndpoint;
 
     @Value("${minio.bucket}")
     String bucketName;
@@ -277,7 +290,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             uploadedFile.setStorageUrl(url);
             this.saveOrUpdate(uploadedFile);
             userFileOpsMapper.insert(new UserFileOps(null, userId, uploadedFile.getId(),
-                    "上传文件", new Date()));
+                    "上传文件", new Date(), Const.OPS_UUID));
 
             chunkStore.remove(key);
         } catch (Exception e) {
@@ -414,6 +427,62 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         amqpTemplate.convertAndSend(Const.MQ_DOWNLOAD_QUEUE, task);
         // todo 上传minio
         return Result.success("下载成功");
+    }
+
+    @Override
+    public Result<String> renameFile(Integer fileId, String newName) {
+        UserFile file = this.getById(fileId);
+        if (file == null) return Result.failure(500, "文件不存在");
+        if (file.getAccountId() != StpUtil.getLoginIdAsInt()) return Result.forbidden("无权限操作");
+        return Result.success(this.update()
+                .eq("id", fileId).set("filename", newName).update() ? "重命名成功" : "重命名失败");
+    }
+
+    @Override
+    public Result<String> createDownloadLink(UserFile file) {
+        String uuid = Const.OPS_UUID;
+        redisTemplate.opsForValue().set(Const.DOWNLOAD_UUID + uuid, file, 30, TimeUnit.MINUTES);
+        return Result.success(serverEndpoint + "/api/file/download?UUID=" + uuid);
+    }
+
+    @Override
+    public void download(String uuid, HttpServletResponse response) {
+        UserFile file = redisTemplate.opsForValue().get(Const.DOWNLOAD_UUID + uuid);
+        if (file != null) {
+            InputStream inputStream = null;
+            try {
+                String encodedFilename = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8)
+                        .replace("+", "%20");
+                String contentDisposition = "attachment; filename=\"" + file.getFilename() +
+                        "\"; filename*=UTF-8''" + encodedFilename;
+                response.setHeader("Content-Disposition", contentDisposition);
+                response.setContentType("application/octet-stream");
+                response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+                response.setContentLengthLong(file.getSize());
+
+                inputStream = minioClient.getObject(GetObjectArgs.builder()
+                        .bucket(bucketName)
+                        .object(file.getStorageUrl())
+                        .build());
+
+                IOUtils.copy(inputStream, response.getOutputStream());
+                response.flushBuffer();
+
+                file.setViewedAt(new Date());
+                this.saveOrUpdate(file);
+            } catch (Exception e) {
+                log.error("下载文件失败：", e);
+            } finally {
+                IOUtils.closeQuietly(inputStream);
+            }
+        } else {
+            try {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                response.getWriter().println(Result.failure(404, "Invalid UUID or File Not Found"));
+            } catch (IOException e) {
+                log.error("写入错误响应失败：", e);
+            }
+        }
     }
 
 }

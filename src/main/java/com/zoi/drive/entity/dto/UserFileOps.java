@@ -40,4 +40,6 @@ public class UserFileOps implements Serializable {
     private String action;
 
     private Date createdAt;
+
+    private String uuid;
 }

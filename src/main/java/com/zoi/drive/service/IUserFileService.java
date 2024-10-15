@@ -5,9 +5,11 @@ import com.zoi.drive.entity.dto.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 /**
@@ -40,4 +42,10 @@ public interface IUserFileService extends IService<UserFile> {
     Result<String> downloadMagnetLink(String magnetLink);
 
     Result<String> offlineDownload(String offlineDownloadLink);
+
+    Result<String> renameFile(Integer fileId, String newName);
+
+    Result<String> createDownloadLink(UserFile file);
+
+    void download(String uuid, HttpServletResponse response);
 }

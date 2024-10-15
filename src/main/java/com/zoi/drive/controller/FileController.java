@@ -11,6 +11,8 @@ import com.zoi.drive.service.IUserFileService;
 import com.zoi.drive.service.IUserFolderService;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +32,7 @@ import static com.zoi.drive.utils.FileUtils.formatFileSize;
  * @Date 2024/9/13 23:31
  **/
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/file")
 @Slf4j
 public class FileController {
 
@@ -40,7 +42,7 @@ public class FileController {
     @Resource
     private IUserFolderService userFolderService;
 
-    @GetMapping("/file/list")
+    @GetMapping("/list")
     public Result<List<FileItemVO>> fileList() {
         List<UserFile> userFileList = userFileService.listUserFiles();
         List<UserFolder> userFolderList = userFolderService.listUserFolders();
@@ -97,7 +99,7 @@ public class FileController {
     }
 
 
-    @PostMapping("/file/upload")
+    @PostMapping("/upload")
     public Result<String> upload(@RequestParam("file") MultipartFile[] files) throws IOException {
         for (MultipartFile file : files) {
             log.info("{} {} {}", file.getOriginalFilename(), file.getContentType(), file.getSize());
@@ -106,26 +108,47 @@ public class FileController {
     }
 
     @FileOpsLog(action = "移动文件")
-    @GetMapping("/file/move")
+    @GetMapping("/move")
     public Result<String> move(@RequestParam("fileId") Integer fileId,
                                @RequestParam("targetFolderId") Integer targetFolderId) {
         return userFileService.move(fileId, targetFolderId);
     }
 
-    @GetMapping("/file/create-folder")
+    @GetMapping("/create-folder")
     public Result<UserFolder> createFolder(@RequestParam("parentFolderId") Integer parentFolderId,
                                        @RequestParam("folderName") String folderName) {
         return userFolderService.createFolder(parentFolderId, folderName);
     }
 
-    @GetMapping("/file/check")
+    @GetMapping("/check")
     public Result<FileCheckResponseVO> check( @RequestParam(value = "folderId", required = false) Integer folderId,
                                               @RequestParam("hash") String hash) {
         return userFileService.checkFileHash(folderId, hash);
     }
 
+    @FileOpsLog(action = "下载文件")
+    @GetMapping("/{fileId}/download")
+    public Result<String> createDownloadLink(@PathVariable("fileId") Integer fileId) {
+        UserFile file = userFileService.getById(fileId);
+        if (file == null) {
+            return Result.failure(500, "文件不存在");
+        }
+        if (file.getAccountId() != StpUtil.getLoginIdAsInt()) {
+            return Result.failure(500, "无该文件访问权限！");
+        }
+        return userFileService.createDownloadLink(file);
+    }
+
+    @GetMapping("/download")
+    public void download(@RequestParam("UUID") String uuid, HttpServletResponse response) throws IOException {
+        if (uuid == null || uuid.length() != 36) {
+            response.getWriter().println(Result.failure(400, "无效的UUID"));
+        }
+        userFileService.download(uuid, response);
+    }
+
     @FileOpsLog(action = "预签名下载")
-    @GetMapping("/file/{fileId}/pre-signed-link")
+    @GetMapping("/{fileId}/pre-signed-link")
     public Result<String> getPreSignedLink(@PathVariable("fileId") Integer fileId) {
         UserFile file = userFileService.getById(fileId);
         if (file == null) {
@@ -141,20 +164,25 @@ public class FileController {
         }
     }
 
-    @GetMapping("/file/download-magnet")
+    @GetMapping("/download-magnet")
     public Result<String> downloadMagnetLink(@RequestParam("magnet") String magnetLink) {
         if (!RegexUtils.isMagnet(magnetLink)) return Result.failure(500, "非法的magnet格式");
         return userFileService.downloadMagnetLink(magnetLink);
     }
 
-    @GetMapping("/file/offline-download")
+    @GetMapping("/offline-download")
     public Result<String> offlineDownload(@RequestParam("link") String offlineDownloadLink) {
-
         return userFileService.offlineDownload(offlineDownloadLink);
     }
 
+    @GetMapping("/rename")
+    public Result<String> rename(@RequestParam("fileId") Integer fileId,
+                                 @RequestParam("newName") String newName) {
+        return userFileService.renameFile(fileId, newName);
+     }
+
     @FileOpsLog(action = "删除文件")
-    @DeleteMapping("/file/{fileId}/delete")
+    @DeleteMapping("/{fileId}/delete")
     public Result<String> delete(@PathVariable("fileId") Integer fileId) {
         UserFile removeObj = userFileService.getById(fileId);
         if (removeObj == null) return Result.failure(500, "文件不存在");
@@ -165,7 +193,7 @@ public class FileController {
         return Result.failure(500, "删除失败，请联系管理员");
     }
 
-    @PostMapping("/file/upload/chunk")
+    @PostMapping("/upload/chunk")
     public Result<String> uploadChunk(@RequestParam("file") MultipartFile file,
                                       @RequestParam("hash") String hash,
                                       @RequestParam("chunk") int chunk,
