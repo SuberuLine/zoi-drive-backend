@@ -5,6 +5,7 @@ import com.zoi.drive.entity.dto.UserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,4 +49,6 @@ public interface IUserFileService extends IService<UserFile> {
     Result<String> createDownloadLink(UserFile file);
 
     void download(String uuid, HttpServletResponse response);
+
+    Result<String> previewFile(UserFile file);
 }

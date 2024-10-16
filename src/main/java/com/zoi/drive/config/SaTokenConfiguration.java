@@ -13,7 +13,6 @@ import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.utils.Const;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -31,7 +30,8 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> {
                     SaRouter.match("/**")
-                            .notMatch("/api/auth/**","/swagger-ui/**", "/image/**", "/api/file/download/**")
+                            .notMatch("/api/auth/**","/swagger-ui/**", "/image/**",
+                                    "/api/file/download/**",  "/api/file/preview/**")
                             .check(r -> StpUtil.checkLogin());
 
                     SaRouter.match("/user/**", r -> StpUtil.checkPermission(Const.DEFAULT_USER_ROLE));

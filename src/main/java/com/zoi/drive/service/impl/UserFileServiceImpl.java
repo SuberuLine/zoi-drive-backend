@@ -30,14 +30,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -82,6 +78,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     private RedisTemplate<String, UserFile> redisTemplate;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     @Value("${server.system.endpoint}")
     String serverEndpoint;
@@ -482,6 +481,27 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             } catch (IOException e) {
                 log.error("写入错误响应失败：", e);
             }
+        }
+    }
+
+    @Override
+    public Result<String> previewFile(UserFile file) {
+        try {
+            return Result.success(
+                    minioClient.getPresignedObjectUrl(
+                            GetPresignedObjectUrlArgs.builder()
+                                    .method(Method.GET)
+                                    .bucket(bucketName)
+                                    .object(file.getStorageUrl())
+                                    .expiry(12 * 60 * 60) // 12小时
+                                    .extraQueryParams(new HashMap<>() {{
+                                        put("response-content-type", file.getType());
+                                    }})
+                                    .build()
+                    )
+            );
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

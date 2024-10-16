@@ -12,6 +12,7 @@ import com.zoi.drive.service.IUserFolderService;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -145,6 +146,18 @@ public class FileController {
             response.getWriter().println(Result.failure(400, "无效的UUID"));
         }
         userFileService.download(uuid, response);
+    }
+
+    @GetMapping("/{fileId}/preview")
+    public Result<String> previewFile(@PathVariable("fileId") Integer fileId) {
+        UserFile file = userFileService.getById(fileId);
+        if (file == null) {
+            return Result.failure(404, "文件不存在");
+        }
+        if (file.getAccountId() != StpUtil.getLoginIdAsInt()) {
+            return Result.failure(500, "无该文件访问权限！");
+        }
+        return userFileService.previewFile(file);
     }
 
     @FileOpsLog(action = "预签名下载")

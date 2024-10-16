@@ -21,6 +21,9 @@ public class Const {
     // 临时下载链接有效期
     public static final String DOWNLOAD_UUID = "file:download:uuid";
 
+    // 预览链接有效期
+    public static final String PREVIEW_UUID = "file:preview:uuid";
+
     // 邮件消息队列
     public static final String MQ_MAIL_QUEUE = "mail";
 
