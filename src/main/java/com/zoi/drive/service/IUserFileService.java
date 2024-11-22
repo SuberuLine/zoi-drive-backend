@@ -48,7 +48,7 @@ public interface IUserFileService extends IService<UserFile> {
 
     Result<String> createDownloadLink(UserFile file);
 
-    void download(String uuid, HttpServletResponse response);
+    void download(String uuid, String signature, String expireAt, HttpServletResponse response);
 
     Result<String> previewFile(UserFile file);
 }

@@ -11,8 +11,6 @@ import com.zoi.drive.service.IUserFileService;
 import com.zoi.drive.service.IUserFolderService;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
-import jakarta.servlet.ServletOutputStream;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -127,6 +125,11 @@ public class FileController {
         return userFileService.checkFileHash(folderId, hash);
     }
 
+    /**
+     * 生成由后端处理的下载链接
+     * @param fileId
+     * @return
+     */
     @FileOpsLog(action = "下载文件")
     @GetMapping("/{fileId}/download")
     public Result<String> createDownloadLink(@PathVariable("fileId") Integer fileId) {
@@ -141,11 +144,14 @@ public class FileController {
     }
 
     @GetMapping("/download")
-    public void download(@RequestParam("UUID") String uuid, HttpServletResponse response) throws IOException {
+    public void download(@RequestParam("UUID") String uuid,
+                         @RequestParam("signature") String signature,
+                         @RequestParam("expireAt") String expireAt,
+                         HttpServletResponse response) throws IOException {
         if (uuid == null || uuid.length() != 36) {
             response.getWriter().println(Result.failure(400, "无效的UUID"));
         }
-        userFileService.download(uuid, response);
+        userFileService.download(uuid, signature, expireAt, response);
     }
 
     @GetMapping("/{fileId}/preview")

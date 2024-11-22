@@ -10,6 +10,7 @@ import com.zoi.drive.mapper.*;
 import com.zoi.drive.service.IUserFileService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zoi.drive.utils.Const;
+import com.zoi.drive.utils.CryptUtils;
 import com.zoi.drive.utils.FileUtils;
 import io.minio.*;
 import io.minio.http.Method;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -439,21 +441,52 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Override
     public Result<String> createDownloadLink(UserFile file) {
-        String uuid = Const.OPS_UUID;
-        redisTemplate.opsForValue().set(Const.DOWNLOAD_UUID + uuid, file, 30, TimeUnit.MINUTES);
-        return Result.success(serverEndpoint + "/api/file/download?UUID=" + uuid);
+        try {
+            String uuid = Const.OPS_UUID;
+            long expireAt = System.currentTimeMillis() + 30 * 60 * 1000;
+            String signature = CryptUtils.generateDLSignature(uuid, expireAt);
+            String downloadUrl = UriComponentsBuilder.fromHttpUrl(serverEndpoint)
+                    .path("/api/file/download")
+                    .queryParam("UUID", uuid)
+                    .queryParam("expireAt", expireAt)
+                    .queryParam("signature", signature)
+                    .toUriString();
+            redisTemplate.opsForValue().set(Const.DOWNLOAD_UUID + uuid, file, 30, TimeUnit.MINUTES);
+            return Result.success(downloadUrl);
+        } catch (Exception e) {
+            log.error("生成下载链接失败：", e);
+            return Result.failure(500, "生成下载链接失败");
+        }
     }
 
     @Override
-    public void download(String uuid, HttpServletResponse response) {
+    public void download(String uuid, String signature, String expireAt, HttpServletResponse response) {
         UserFile file = redisTemplate.opsForValue().get(Const.DOWNLOAD_UUID + uuid);
         if (file != null) {
             InputStream inputStream = null;
             try {
+                if (signature == null || expireAt == null) {
+                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    response.getWriter().println(Result.failure(400, "Require param missing"));
+                    return;
+                }
+
+                long expirationTime = Long.parseLong(expireAt);
+                if (System.currentTimeMillis() > expirationTime) {
+                    response.setStatus(HttpServletResponse.SC_GONE);
+                    response.getWriter().println(Result.failure(410, "Link expired"));
+                    return;
+                }
+
+                if (!CryptUtils.isSignatureValid(uuid, expirationTime, signature)) {
+                    response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    response.getWriter().println(Result.failure(403, "Illegal signature"));
+                    return;
+                }
+
                 String encodedFilename = URLEncoder.encode(file.getFilename(), StandardCharsets.UTF_8)
                         .replace("+", "%20");
-                String contentDisposition = "attachment; filename=\"" + file.getFilename() +
-                        "\"; filename*=UTF-8''" + encodedFilename;
+                String contentDisposition = "attachment; filename*=UTF-8''" + encodedFilename;
                 response.setHeader("Content-Disposition", contentDisposition);
                 response.setContentType("application/octet-stream");
                 response.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
