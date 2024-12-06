@@ -57,23 +57,6 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
                     // ...
                 })
 
-                // 异常处理函数：每次认证函数发生异常时执行此函数
-                .setError(e -> {
-                    SaManager.getLog().error("请求处理出错: " + e.getMessage(), e);
-                    if (e instanceof NotLoginException) {
-                        return Result.failure(401, "未登录或 token 无效: " + e.getMessage());
-                    } else if (e instanceof NotPermissionException) {
-                        return Result.failure(403, "无权限访问");
-                    } else if (e instanceof NotRoleException) {
-                        return Result.failure(403, "角色不符合要求");
-                    } else if (e instanceof SaTokenException) {
-                        return Result.failure(401, "认证错误: " + e.getMessage());
-                    } else if (e instanceof HttpRequestMethodNotSupportedException) {
-                        return Result.failure(405, "请求方法不支持");
-                    }
-                    return Result.failure(500, "服务器内部错误");
-                })
-
                 // 前置函数：在每次认证函数之前执行
                 .setBeforeAuth(obj -> {
                     SaHolder.getResponse()
