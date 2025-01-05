@@ -43,7 +43,7 @@ public class UserCheckin implements Serializable {
     private Date lastCheckin;
 
     @Schema(description = "签到奖励")
-    private BigDecimal checkinReward;
+    private long checkinReward;
 
     @Schema(description = "当天为止连续签到天数")
     private Integer checkinConsecutive;

@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.math.BigDecimal;
+
+import com.zoi.drive.entity.BaseData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,8 +37,8 @@ public class UserDetail implements Serializable {
     private Integer accountId;
 
     @Schema(description = "总存储空间")
-    private BigDecimal totalStorage;
+    private long totalStorage;
 
     @Schema(description = "已用存储空间")
-    private BigDecimal usedStorage;
+    private long usedStorage;
 }

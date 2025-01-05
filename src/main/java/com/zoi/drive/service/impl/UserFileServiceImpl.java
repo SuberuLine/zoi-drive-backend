@@ -32,6 +32,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -67,6 +68,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     private AccountMapper accountMapper;
 
     @Resource
+    private UserDetailMapper userDetailMapper;
+
+    @Resource
     private UserFolderMapper userFolderMapper;
 
     @Resource
@@ -80,9 +84,6 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     private RedisTemplate<String, UserFile> redisTemplate;
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Value("${server.system.endpoint}")
     String serverEndpoint;
@@ -166,7 +167,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             String fileName = FileUtils.removeExtension(file.getOriginalFilename());
             String type = FileUtils.getMimeType(file.getOriginalFilename());
             Date date = new Date();
-            String url = Const.USER_UPLOAD_FOLDER + fileName;
+            String url = "main/" + StpUtil.getLoginIdAsString() + "/" + fileName;
             PutObjectArgs args = PutObjectArgs.builder()
                     .bucket(bucketName)
                     .object(url)
@@ -180,7 +181,19 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                             file.getSize(), response.etag(), url, false, date,
                             null);
                     if (this.save(userFile)) {
-                        return Result.success("上传文件成功！");
+                        // 增加对应已用空间
+                        UserDetail currentUserDetail = userDetailMapper.selectById(StpUtil.getLoginIdAsInt());
+                        long usedStorage = currentUserDetail.getUsedStorage();
+                        long newStorageUsed = usedStorage + file.getSize();
+                        if (newStorageUsed <= currentUserDetail.getTotalStorage()) {
+                            currentUserDetail.setUsedStorage(newStorageUsed);
+                            userDetailMapper.updateById(currentUserDetail);
+                            return Result.success("上传文件成功！");
+                        } else {
+                            return Result.failure(403, "文件上传失败：空间不足");
+                        }
+                    } else {
+                        return Result.failure(500, "保存失败，请联系管理员");
                     }
                 }
             } catch (Exception e) {
@@ -256,7 +269,13 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             return;
         }
 
-        String url = Const.USER_UPLOAD_FOLDER + uploadedFile.getFilename();
+        UserDetail currentUserDetail = userDetailMapper.selectById(userId);
+
+        if (currentUserDetail.getUsedStorage() + uploadedFile.getSize() > currentUserDetail.getTotalStorage()) {
+            throw new RuntimeException("存储空间已满，终止合并文件");
+        }
+
+        String url = "main/" + userId + "/" + uploadedFile.getFilename();
 
         List<ComposeSource> sources = IntStream.range(0, chunks.getTotalChunks())
                 .mapToObj(i -> ComposeSource.builder()
@@ -276,15 +295,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
             log.info("File merged successfully. ETag: {}", response.etag());
 
-            // 清理分片
-            for (int i = 0; i < chunks.getTotalChunks(); i++) {
-                minioClient.removeObject(
-                        RemoveObjectArgs.builder()
-                                .bucket(bucketName)
-                                .object(chunks.getStorageUrl() + i)
-                                .build()
-                );
-            }
+            deleteUploadedChunks(chunks);
 
             // 更新数据库
             uploadedFile.setSize(getObjectSize(url));
@@ -293,10 +304,46 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             userFileOpsMapper.insert(new UserFileOps(null, userId, uploadedFile.getId(),
                     "上传文件", new Date(), Const.OPS_UUID));
 
+            // 计算新增空间
+            long usedStorage = currentUserDetail.getUsedStorage();
+            long newStorageUsed = usedStorage + uploadedFile.getSize();
+
+            // 检查存储空间
+            if (newStorageUsed > currentUserDetail.getTotalStorage()) {
+                // 空间不足，回退上传逻辑
+                log.error("存储空间不足: 已用空间={}, 新增空间={}, 总空间={}", usedStorage, uploadedFile.getSize(), currentUserDetail.getTotalStorage());
+                deleteUploadedChunks(chunks); // 删除已上传的分片文件
+                this.removeById(uploadedFile.getId());
+                throw new RuntimeException("存储空间不足，已回退上传逻辑");
+            }
+
+            // 增加对应已用空间
+            currentUserDetail.setUsedStorage(newStorageUsed);
+            userDetailMapper.updateById(currentUserDetail);
+
             chunkStore.remove(key);
         } catch (Exception e) {
             log.error("Error merging file chunks or updating database. Hash: {}", uploadedFile.getHash(), e);
             // 考虑实现重试机制或通知管理员
+        }
+    }
+
+    /**
+     * 删除已上传的分片文件
+     */
+    private void deleteUploadedChunks(Chunks chunks) {
+        try {
+            for (int i = 0; i < chunks.getTotalChunks(); i++) {
+                minioClient.removeObject(
+                        RemoveObjectArgs.builder()
+                                .bucket(bucketName)
+                                .object(chunks.getStorageUrl() + i)
+                                .build()
+                );
+            }
+            log.info("已删除分片文件: {}", chunks.getStorageUrl());
+        } catch (Exception e) {
+            log.error("删除分片文件失败: {}", e.getMessage());
         }
     }
 

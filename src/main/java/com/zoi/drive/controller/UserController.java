@@ -3,6 +3,8 @@ package com.zoi.drive.controller;
 import cn.dev33.satoken.stp.StpUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
+import com.zoi.drive.entity.dto.UserDetail;
+import com.zoi.drive.entity.vo.response.UserDetailVO;
 import com.zoi.drive.entity.vo.response.UserInfoVO;
 import com.zoi.drive.entity.vo.response.UserSettingVO;
 import com.zoi.drive.service.IAccountService;
@@ -13,6 +15,8 @@ import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.math.BigDecimal;
 
 /**
  * @Description TODO
@@ -40,7 +44,12 @@ public class UserController {
         Account account = accountService.getById(StpUtil.getLoginIdAsInt());
         UserInfoVO userInfoVO = account.asViewObject(UserInfoVO.class);
         userInfoVO.setUserCheckin(checkinService.getById(account.getCheckin()));
-        userInfoVO.setUserDetail(userDetailService.getById(account.getDetails()));
+        // 计算用户容量，返回MB格式
+        UserDetail userDetail = userDetailService.getById(account.getDetails());
+        UserDetailVO userDetailVO = new UserDetailVO(userDetail.getId(), userDetail.getAccountId(), null, null);
+        userDetailVO.setTotalStorage(BigDecimal.valueOf(userDetail.getTotalStorage() / 1024 / 1024));
+        userDetailVO.setUsedStorage(BigDecimal.valueOf(userDetail.getUsedStorage() / 1024 / 1024));
+        userInfoVO.setUserDetail(userDetailVO);
         userInfoVO.setUserSetting(settingService.getById(account.getSettings()).asViewObject(UserSettingVO.class));
         return Result.success(userInfoVO);
     }

@@ -41,14 +41,14 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
     public Result<String> dailyCheckin(Account account) {
         UserDetail userDetail = userDetailMapper.selectById(account.getDetails());
         UserCheckin obj = userCheckinMapper.selectById(account.getCheckin());
-        BigDecimal reward;
+        long reward;
 
         Date lastCheckin = obj.getLastCheckin();
         if (lastCheckin == null) {
             obj.setCheckinCount(1);
             obj.setCheckinConsecutive(1);
             obj.setLastCheckin(new Date(System.currentTimeMillis()));
-            reward = generateRandomDecimal(1, 80);
+            reward = generateRandomLong(1, 80);
         } else {
             // 重复签到
             if (DateUtils.isSameDay(obj.getLastCheckin(), new Date(System.currentTimeMillis()))) {
@@ -59,24 +59,25 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
                 obj.setCheckinCount(obj.getCheckinCount() + 1);
                 obj.setCheckinConsecutive(obj.getCheckinConsecutive() + 1);
                 obj.setLastCheckin(new Date(System.currentTimeMillis()));
-                reward = generateRandomDecimal(10, 100);
+                reward = generateRandomLong(10, 100);
             } else {
                 // 断签逻辑
                 obj.setCheckinCount(obj.getCheckinCount() + 1);
                 obj.setCheckinConsecutive(1);
                 obj.setLastCheckin(new Date(System.currentTimeMillis()));
-                reward = generateRandomDecimal(1, 80);
+                reward = generateRandomLong(1, 80);
             }
         }
-        obj.setCheckinReward(obj.getCheckinReward() != null ? obj.getCheckinReward().add(reward) : reward);
-        userDetail.setTotalStorage(userDetail.getTotalStorage() != null ? userDetail.getTotalStorage().add(reward) : reward);
+        obj.setCheckinReward(obj.getCheckinReward() != 0 ? obj.getCheckinReward() + reward : reward);
+        userDetail.setTotalStorage(userDetail.getTotalStorage() != 0 ? userDetail.getTotalStorage() + reward : reward);
 
         try {
             boolean checkinUpdated = userCheckinMapper.updateById(obj) > 0;
             boolean detailUpdated = userDetailMapper.updateById(userDetail) > 0;
             if (checkinUpdated && detailUpdated) {
-                return Result.success(reward + "M",
-                        "签到成功,已连续签到" + obj.getCheckinConsecutive() + "天" + "，奖励空间" + reward + "M");
+                return Result.success((reward / 1024 / 1024) + "M",
+                        "签到成功,已连续签到" + obj.getCheckinConsecutive() + "天" +
+                                "，奖励空间" + (reward / 1024 / 1024) + "M");
             } else {
                 return Result.failure(500, "签到失败");
             }
@@ -108,17 +109,13 @@ public class UserCheckinServiceImpl extends ServiceImpl<UserCheckinMapper, UserC
     }
 
     /**
-     * 生成指定范围内的BigDecimal类型的随机数，并保留两位小数。
+     * 生成指定范围内的随机 long 值
      *
      * @param min 最小值（包含）
      * @param max 最大值（不包含）
-     * @return 生成的BigDecimal类型的随机数
+     * @return 生成的随机 long 值
      */
-    private static BigDecimal generateRandomDecimal(int min, int max) {
-        int intValue = ThreadLocalRandom.current().nextInt(max - min) + min;
-        int fractionValue = ThreadLocalRandom.current().nextInt(100);
-
-        BigDecimal decimalValue = new BigDecimal(intValue + "." + fractionValue);
-        return decimalValue.setScale(2, RoundingMode.HALF_UP);
+    private static long generateRandomLong(int min, int max) {
+        return ThreadLocalRandom.current().nextLong(min, max) * 1024 * 1024;
     }
 }

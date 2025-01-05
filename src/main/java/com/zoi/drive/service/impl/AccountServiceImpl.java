@@ -65,7 +65,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     private StringRedisTemplate stringRedisTemplate;
 
     @Value("${server.system.default-storage}")
-    BigDecimal defaultStorage;
+    long defaultStorage;
 
     @Override
     public Account findAccountByNameOrEmail(String text) {
@@ -197,10 +197,10 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         try {
             if (this.save(account)) {
                 // 初始化用户详情
-                UserDetail userDetail = new UserDetail(null, account.getId(), defaultStorage, BigDecimal.valueOf(0));
+                UserDetail userDetail = new UserDetail(null, account.getId(), defaultStorage, 0);
                 // 初始化用户签到信息
                 UserCheckin userCheckin = new UserCheckin(null, account.getId(), 0, null,
-                        null, 0);
+                        0, 0);
                 // 初始化用户设置
                 UserSetting userSetting = new UserSetting(null, account.getId(), false, null);
 

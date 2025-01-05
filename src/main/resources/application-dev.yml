@@ -35,7 +35,7 @@ server:
   port: 9088
   system:
     endpoint: http://localhost:9088
-    default-storage: 1000.00
+    default-storage: 1048576000
 
 sa-token:
   token-name: Token
