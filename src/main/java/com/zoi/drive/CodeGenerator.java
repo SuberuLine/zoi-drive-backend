@@ -8,7 +8,7 @@ import java.sql.Types;
 
 public class CodeGenerator {
     public static void main(String[] args) {
-        FastAutoGenerator.create("jdbc:postgresql://192.168.6.156:5432/drive", "postgres", "123456")
+        FastAutoGenerator.create("jdbc:postgresql://127.0.0.1:5432/drive", "postgres", "123456")
                 .globalConfig(builder -> {
                     builder.author("Yuzoi") // 设置作者
                             .enableSpringdoc() // 开启 swagger 模式

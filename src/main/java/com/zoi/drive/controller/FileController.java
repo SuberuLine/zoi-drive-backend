@@ -5,22 +5,24 @@ import com.zoi.drive.annotation.FileOpsLog;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserFile;
 import com.zoi.drive.entity.dto.UserFolder;
+import com.zoi.drive.entity.dto.UserRecycle;
 import com.zoi.drive.entity.vo.response.FileCheckResponseVO;
 import com.zoi.drive.entity.vo.response.FileItemVO;
 import com.zoi.drive.service.IUserFileService;
 import com.zoi.drive.service.IUserFolderService;
+import com.zoi.drive.service.IUserRecycleService;
+import com.zoi.drive.utils.Const;
 import com.zoi.drive.utils.RegexUtils;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.zoi.drive.utils.FileUtils.formatFileSize;
 
@@ -41,10 +43,18 @@ public class FileController {
     @Resource
     private IUserFolderService userFolderService;
 
+    @Resource
+    private IUserRecycleService userRecycleService;
+
+    @Value("${server.system.default-recycle-expired}")
+    int defaultRecycleExpired;
+
     @GetMapping("/list")
     public Result<List<FileItemVO>> fileList() {
-        List<UserFile> userFileList = userFileService.listUserFiles();
-        List<UserFolder> userFolderList = userFolderService.listUserFolders();
+        List<UserFile> userFileList = userFileService.listUserFiles()
+                .stream().filter(item -> item.getStatus() != null && item.getStatus() == 1).toList();
+        List<UserFolder> userFolderList = userFolderService.listUserFolders()
+                .stream().filter(item -> item.getStatus() != null && item.getStatus() == 1).toList();
         List<FileItemVO> fileListView = new ArrayList<>();
 
         Map<Integer, FileItemVO> folderMap = new HashMap<>();
@@ -204,12 +214,33 @@ public class FileController {
     @DeleteMapping("/{fileId}/delete")
     public Result<String> delete(@PathVariable("fileId") Integer fileId) {
         UserFile removeObj = userFileService.getById(fileId);
+        int userId = StpUtil.getLoginIdAsInt();
         if (removeObj == null) return Result.failure(500, "文件不存在");
-        if (removeObj.getAccountId() != StpUtil.getLoginIdAsInt()) return Result.failure(500, "无权限操作");
-        if (userFileService.removeById(fileId)) {
+        if (removeObj.getAccountId() != userId) return Result.failure(500, "无权限操作");
+        removeObj.setStatus(Const.FILE_RECYCLED);
+        if (userFileService.updateById(removeObj)) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, defaultRecycleExpired);
+            userRecycleService.saveOrUpdate(new UserRecycle(null, fileId, userId, removeObj.getFilename(),
+                    "file",calendar.getTime() , new Date()));
             return Result.success("删除成功");
         }
         return Result.failure(500, "删除失败，请联系管理员");
+    }
+
+    @FileOpsLog(action = "删除文件夹")
+    @DeleteMapping("/folder/{folderId}/delete")
+    public Result<String> deleteFolder(@PathVariable("folderId") Integer folderId) {
+        UserFolder removeObj = userFolderService.getById(folderId);
+        if (removeObj == null) return Result.failure(500, "文件夹不存在");
+        if (removeObj.getAccountId() != StpUtil.getLoginIdAsInt()) return Result.failure(500, "无权限操作");
+        removeObj.setStatus(Const.FILE_RECYCLED);
+        // TODO: 文件夹的子文件状态设置
+        if (userFolderService.updateById(removeObj)) {
+            return Result.success("删除成功");
+        } else {
+            return Result.failure(500, "删除失败，文件夹不为空");
+        }
     }
 
     @PostMapping("/upload/chunk")

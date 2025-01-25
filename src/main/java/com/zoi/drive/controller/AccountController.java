@@ -64,8 +64,8 @@ public class AccountController {
 
     @PostMapping("/upload-avatar")
     public Result<String> uploadAvatar(@RequestParam("avatar") MultipartFile file) throws Exception {
-        if (file.getSize() > 1024 * 1024)
-            return Result.failure(400, "头像大小不能超过1MB");
+        if (file.getSize() > 1024 * 1024 * 5)
+            return Result.failure(400, "头像大小不能超过5MB");
         log.info("正在进行头像上传操作...");
         String url = userFileService.uploadAvatar(file);
         if (url != null) {

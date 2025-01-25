@@ -54,4 +54,6 @@ public class UserFile implements Serializable {
     private Date uploadAt;
 
     private Date viewedAt;
+
+    private Integer status;
 }

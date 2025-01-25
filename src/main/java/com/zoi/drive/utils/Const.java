@@ -46,5 +46,12 @@ public class Const {
     public static final String TWO_FACTOR_SECRET_KEY = "two_factor:secret:";
 
     public static final String FILE_MERGE_LOCK = "lock:file_merge:";
+
+    // 文件状态 0为回收站中 1为正常 -1为已永久删除
+    public static final Integer FILE_RECYCLED = 0;
+
+    public static final Integer FILE_NORMALCY = 1;
+
+    public static final Integer FILE_DELETED = -1;
 }
 

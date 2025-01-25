@@ -45,11 +45,7 @@ public class UserController {
         UserInfoVO userInfoVO = account.asViewObject(UserInfoVO.class);
         userInfoVO.setUserCheckin(checkinService.getById(account.getCheckin()));
         // 计算用户容量，返回MB格式
-        UserDetail userDetail = userDetailService.getById(account.getDetails());
-        UserDetailVO userDetailVO = new UserDetailVO(userDetail.getId(), userDetail.getAccountId(), null, null);
-        userDetailVO.setTotalStorage(BigDecimal.valueOf(userDetail.getTotalStorage() / 1024 / 1024));
-        userDetailVO.setUsedStorage(BigDecimal.valueOf(userDetail.getUsedStorage() / 1024 / 1024));
-        userInfoVO.setUserDetail(userDetailVO);
+        userInfoVO.setUserDetail(userDetailService.getById(account.getDetails()));
         userInfoVO.setUserSetting(settingService.getById(account.getSettings()).asViewObject(UserSettingVO.class));
         return Result.success(userInfoVO);
     }

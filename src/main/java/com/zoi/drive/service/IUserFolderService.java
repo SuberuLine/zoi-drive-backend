@@ -19,4 +19,6 @@ public interface IUserFolderService extends IService<UserFolder> {
     List<UserFolder> listUserFolders();
 
     Result<UserFolder> createFolder(Integer parentFolderId, String folderName);
+
+    boolean removeFolder(Integer folderId);
 }

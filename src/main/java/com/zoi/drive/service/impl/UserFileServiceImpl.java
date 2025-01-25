@@ -131,7 +131,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             ObjectWriteResponse response = minioClient.putObject(args);
             if (response != null) {
                if ( this.save(new UserFile(null, userId, Const.FOLDER_AVATAR_ID, imageName, type,
-                       file.getSize(), response.etag(), url, false, date, null)) ){
+                       file.getSize(), response.etag(), url, false, date, null, Const.FILE_NORMALCY)) ){
                    String avatar = accountMapper.selectById(userId).getAvatar();
                    // 逻辑删除上传的旧头像
                    if (avatar != null && !avatar.isEmpty()) {
@@ -179,7 +179,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                 if (response != null) {
                     UserFile userFile = new UserFile(null, StpUtil.getLoginIdAsInt(), 0, fileName, type,
                             file.getSize(), response.etag(), url, false, date,
-                            null);
+                            null, Const.FILE_NORMALCY);
                     if (this.save(userFile)) {
                         // 增加对应已用空间
                         UserDetail currentUserDetail = userDetailMapper.selectById(StpUtil.getLoginIdAsInt());
@@ -245,7 +245,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                 log.info("All chunks uploaded for hash: {}. Triggering merge operation.", hash);
                 UserFile uploadedFile = new UserFile(null, StpUtil.getLoginIdAsInt(), folderId, file.getOriginalFilename(),
                         FileUtils.getMimeType(file.getOriginalFilename()), -1, hash, null, false,
-                        new Date(), null);
+                        new Date(), null, Const.FILE_NORMALCY);
                 this.updateById(uploadedFile);
                 // 异步执行合并操作，避免阻塞上传过程
                 executorService.submit(() -> completeMerge(userId, key, uploadedFile));

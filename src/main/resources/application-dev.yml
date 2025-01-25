@@ -36,6 +36,7 @@ server:
   system:
     endpoint: http://localhost:9088
     default-storage: 1048576000
+    default-recycle-expired: 15
 
 sa-token:
   token-name: Token
