@@ -200,7 +200,7 @@ public class FileController {
     }
 
     @GetMapping("/offline-download")
-    public Result<String> offlineDownload(@RequestParam("link") String offlineDownloadLink) {
+    public Result<String> offlineDownload(@RequestParam("url") String offlineDownloadLink) {
         return userFileService.offlineDownload(offlineDownloadLink);
     }
 

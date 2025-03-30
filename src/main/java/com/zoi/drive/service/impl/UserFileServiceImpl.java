@@ -32,7 +32,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.net.URLEncoder;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -80,6 +82,9 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Resource
     private AmqpTemplate amqpTemplate;
+
+    @Resource
+    private UserDownloadTaskMapper userDownloadTaskMapper;
 
     @Resource
     private RedisTemplate<String, UserFile> redisTemplate;
@@ -466,14 +471,37 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
 
     @Override
     public Result<String> offlineDownload(String offlineDownloadLink) {
-
-        String fileName = offlineDownloadLink.substring(offlineDownloadLink.lastIndexOf("/") + 1);
+        // 从链接中提取文件名
+        String fileName = extractFilenameFromUrl(offlineDownloadLink);
         UserDownloadTask task = new UserDownloadTask(null, StpUtil.getLoginIdAsInt(), offlineDownloadLink,
-                "http", null, "pending", new Date(), null, null, 0);
-        //userDownloadTaskMapper.insert(task);
+                "http", fileName, "pending", new Date(), null, null, 0);
+        userDownloadTaskMapper.insert(task);
+        // 将下载任务发送到消息队列
         amqpTemplate.convertAndSend(Const.MQ_DOWNLOAD_QUEUE, task);
-        // todo 上传minio
-        return Result.success("下载成功");
+        return Result.success("下载任务已创建，请在下载列表中查看进度");
+    }
+
+    /**
+     * 从URL中提取文件名
+     * @param url 下载URL
+     * @return 提取的文件名，如果无法提取则返回基于时间戳的默认文件名
+     */
+    private String extractFilenameFromUrl(String url) {
+        try {
+            String path = new URI(url).getPath();
+            String[] segments = path.split("/");
+            String lastSegment = segments[segments.length - 1];
+            
+            // 如果URL末尾有文件名
+            if (lastSegment != null && !lastSegment.isEmpty()) {
+                return URLDecoder.decode(lastSegment, StandardCharsets.UTF_8);
+            }
+        } catch (Exception e) {
+            log.warn("无法从URL提取文件名: {}", url, e);
+        }
+        
+        // 如果无法提取，则使用时间戳创建默认文件名
+        return "download_" + new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
     }
 
     @Override
@@ -572,7 +600,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
                                     .method(Method.GET)
                                     .bucket(bucketName)
                                     .object(file.getStorageUrl())
-                                    .expiry(12 * 60 * 60) // 12小时
+                                    .expiry(3 * 60 * 60) // 12小时
                                     .extraQueryParams(new HashMap<>() {{
                                         put("response-content-type", file.getType());
                                     }})
