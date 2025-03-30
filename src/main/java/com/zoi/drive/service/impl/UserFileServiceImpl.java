@@ -2,6 +2,7 @@ package com.zoi.drive.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.*;
@@ -22,7 +23,6 @@ import org.apache.commons.compress.utils.IOUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +32,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -583,6 +582,38 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public List<UserFile> listFilesByFolderId(Integer accountId, Long folderId) {
+        List<UserFile> result = new ArrayList<>();
+        
+        // 查询当前文件夹下的所有文件
+        LambdaQueryWrapper<UserFile> queryWrapper = new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getAccountId, accountId)
+                .eq(UserFile::getFolderId, folderId)
+                .eq(UserFile::getIsDeleted, false)
+                .orderByDesc(UserFile::getUploadAt);
+        
+        List<UserFile> files = this.list(queryWrapper);
+        result.addAll(files);
+        
+        // 查询当前文件夹下的所有子文件夹
+        LambdaQueryWrapper<UserFile> folderQueryWrapper = new LambdaQueryWrapper<UserFile>()
+                .eq(UserFile::getAccountId, accountId)
+                .eq(UserFile::getFolderId, folderId)
+                .eq(UserFile::getType, "folder")
+                .eq(UserFile::getIsDeleted, false);
+        
+        List<UserFile> subFolders = this.list(folderQueryWrapper);
+        
+        // 递归获取子文件夹中的文件
+        for (UserFile subFolder : subFolders) {
+            List<UserFile> subFiles = listFilesByFolderId(accountId, Long.valueOf(subFolder.getId()));
+            result.addAll(subFiles);
+        }
+        
+        return result;
     }
 
 }

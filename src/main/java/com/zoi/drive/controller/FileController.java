@@ -52,9 +52,9 @@ public class FileController {
     @GetMapping("/list")
     public Result<List<FileItemVO>> fileList() {
         List<UserFile> userFileList = userFileService.listUserFiles()
-                .stream().filter(item -> item.getStatus() != null && item.getStatus() == 1).toList();
+                .stream().filter(item -> item.getStatus() != null && (item.getStatus() == 1 || item.getStatus() == 3)).toList();
         List<UserFolder> userFolderList = userFolderService.listUserFolders()
-                .stream().filter(item -> item.getStatus() != null && item.getStatus() == 1).toList();
+                .stream().filter(item -> item.getStatus() != null && (item.getStatus() == 1 || item.getStatus() == 3)).toList();
         List<FileItemVO> fileListView = new ArrayList<>();
 
         Map<Integer, FileItemVO> folderMap = new HashMap<>();

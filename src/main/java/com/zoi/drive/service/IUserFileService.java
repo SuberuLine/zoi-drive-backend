@@ -51,4 +51,6 @@ public interface IUserFileService extends IService<UserFile> {
     void download(String uuid, String signature, String expireAt, HttpServletResponse response);
 
     Result<String> previewFile(UserFile file);
+
+    List<UserFile> listFilesByFolderId(Integer accountId, Long folderId);
 }
