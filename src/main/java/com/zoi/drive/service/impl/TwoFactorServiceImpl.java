@@ -1,6 +1,7 @@
 package com.zoi.drive.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.temp.SaTempUtil;
 import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.Account;
 import com.zoi.drive.entity.dto.UserSetting;
@@ -81,7 +82,8 @@ public class TwoFactorServiceImpl implements ITwoFactorService {
         Account currentLoginUser = accountMapper.selectById(StpUtil.getLoginIdAsInt());
         UserSetting userSetting = userSettingMapper.selectById(currentLoginUser.getSettings());
         if (Boolean.TRUE.equals(isValidCode(code, userSetting.getTwoFactorCode())) && userSetting.getTwoFactorStatus()) {
-            return Result.success("验证成功");
+            String token = SaTempUtil.createToken(currentLoginUser.getId() + ":2FA", 300);
+            return Result.success(token);
         } else if (Boolean.FALSE.equals(isValidCode(code, userSetting.getTwoFactorCode()))) {
             return Result.failure(400, "验证码错误");
         } else {

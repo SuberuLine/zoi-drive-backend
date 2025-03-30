@@ -21,4 +21,5 @@ public interface IUserFolderService extends IService<UserFolder> {
     Result<UserFolder> createFolder(Integer parentFolderId, String folderName);
 
     boolean removeFolder(Integer folderId);
+
 }

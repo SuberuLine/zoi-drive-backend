@@ -616,4 +616,25 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         return result;
     }
 
+    @Override
+    public UserFile getUserFileById(Integer fileId) {
+        return this.query().eq("id", fileId).one();
+    }
+
+    @Override
+    public void encryptFiles(List<Integer> fileIds) {
+        fileIds.forEach(fileId -> {
+            UserFile userFile = this.query().eq("id", fileId).one();
+            userFile.setStatus(Const.FILE_SAFES);
+            this.updateById(userFile);
+        });
+    }
+
+    @Override
+    public void decryptFiles(Integer fileId) {
+        UserFile userFile = this.query().eq("id", fileId).one();
+        userFile.setStatus(Const.FILE_NORMALCY);
+        this.updateById(userFile);
+    }
+
 }

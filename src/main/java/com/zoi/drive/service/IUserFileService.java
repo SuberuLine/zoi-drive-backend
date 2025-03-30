@@ -53,4 +53,10 @@ public interface IUserFileService extends IService<UserFile> {
     Result<String> previewFile(UserFile file);
 
     List<UserFile> listFilesByFolderId(Integer accountId, Long folderId);
+
+    UserFile getUserFileById(Integer fileId);
+
+    void encryptFiles(List<Integer> fileIds);
+
+    void decryptFiles(Integer fileIds);
 }

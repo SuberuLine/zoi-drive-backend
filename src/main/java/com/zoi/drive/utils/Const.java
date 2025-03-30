@@ -52,6 +52,8 @@ public class Const {
 
     public static final Integer FILE_NORMALCY = 1;
 
+    public static final Integer FILE_SAFES = 2;
+
     public static final Integer FILE_DELETED = -1;
 }
 
