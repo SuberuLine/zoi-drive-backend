@@ -474,7 +474,7 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         // 从链接中提取文件名
         String fileName = extractFilenameFromUrl(offlineDownloadLink);
         UserDownloadTask task = new UserDownloadTask(null, StpUtil.getLoginIdAsInt(), offlineDownloadLink,
-                "http", fileName, "pending", new Date(), null, null, 0);
+                "http", fileName, "pending", new Date(), null, null, 0, false);
         userDownloadTaskMapper.insert(task);
         // 将下载任务发送到消息队列
         amqpTemplate.convertAndSend(Const.MQ_DOWNLOAD_QUEUE, task);

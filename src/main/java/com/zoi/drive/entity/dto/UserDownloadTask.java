@@ -2,10 +2,12 @@ package com.zoi.drive.entity.dto;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
 
+import com.zoi.drive.entity.BaseData;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -26,7 +28,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @TableName("db_user_download_task")
 @Schema(name = "UserDownloadTask", description = "")
-public class UserDownloadTask implements Serializable {
+public class UserDownloadTask implements Serializable, BaseData {
 
     private static final long serialVersionUID = 1L;
 
@@ -51,4 +53,7 @@ public class UserDownloadTask implements Serializable {
     private Date completedAt;
 
     private Integer progress;
+
+    @TableLogic
+    private Boolean isDeleted;
 }

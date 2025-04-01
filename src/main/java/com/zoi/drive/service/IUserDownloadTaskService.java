@@ -1,7 +1,10 @@
 package com.zoi.drive.service;
 
+import com.zoi.drive.entity.Result;
 import com.zoi.drive.entity.dto.UserDownloadTask;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * <p>
@@ -13,4 +16,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface IUserDownloadTaskService extends IService<UserDownloadTask> {
 
+    List<UserDownloadTask> listUserDownloadTasks(Integer accountId);
+
+    Result<String> clearDownloadTask(int loginIdAsInt);
 }

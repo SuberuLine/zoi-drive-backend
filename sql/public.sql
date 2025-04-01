@@ -12,7 +12,7 @@
  Target Server Version : 170002 (170002)
  File Encoding         : 65001
 
- Date: 25/01/2025 22:32:11
+ Date: 31/03/2025 02:07:40
 */
 
 
@@ -137,16 +137,16 @@ CACHE 1;
 ALTER SEQUENCE "public"."db_user_setting_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
--- Sequence structure for db_user_share_id_seq
+-- Sequence structure for db_user_shares_id_seq
 -- ----------------------------
-DROP SEQUENCE IF EXISTS "public"."db_user_share_id_seq";
-CREATE SEQUENCE "public"."db_user_share_id_seq" 
+DROP SEQUENCE IF EXISTS "public"."db_user_shares_id_seq";
+CREATE SEQUENCE "public"."db_user_shares_id_seq" 
 INCREMENT 1
 MINVALUE  1
-MAXVALUE 2147483647
+MAXVALUE 9223372036854775807
 START 1
 CACHE 1;
-ALTER SEQUENCE "public"."db_user_share_id_seq" OWNER TO "postgres";
+ALTER SEQUENCE "public"."db_user_shares_id_seq" OWNER TO "postgres";
 
 -- ----------------------------
 -- Sequence structure for db_user_solution_id_seq
@@ -186,9 +186,8 @@ ALTER TABLE "public"."db_account" OWNER TO "postgres";
 -- Records of db_account
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."db_account" ("id", "username", "password", "phone", "email", "avatar", "role", "status", "checkin", "details", "settings", "register_time", "is_deleted") VALUES (3, 'yuzoi', '$2a$10$G0.bSytRjSRpzaYtGikdfe1F5/Blz.Pgv.ENr4vT5P/c.yHLpVsLC', NULL, '123@abc.com', NULL, '{user}', NULL, 3, 3, 1, '2024-09-20', 'f');
-INSERT INTO "public"."db_account" ("id", "username", "password", "phone", "email", "avatar", "role", "status", "checkin", "details", "settings", "register_time", "is_deleted") VALUES (2, 'test', '$2a$10$wQIm85991R99JEYRIN80JOcsZnTCOYZJfp5rMVtflQMGit1vgXV0y', NULL, 'abc@123.com', NULL, '{user}', NULL, 2, 2, NULL, '2024-09-20', 'f');
 INSERT INTO "public"."db_account" ("id", "username", "password", "phone", "email", "avatar", "role", "status", "checkin", "details", "settings", "register_time", "is_deleted") VALUES (1, 'admin', '$2a$10$R8dXZ0p27/DvprCNoMxqiudn20dG89/Du21/cN/BylTtb4ZE877Ki', NULL, '1763611895@qq.com', '/image/avatar/2025-01-06/19D2FD3D7F8D4E6CB9BD518315AD8E7F', '{user}', NULL, 4, 1, 2, '2024-07-25', 'f');
+INSERT INTO "public"."db_account" ("id", "username", "password", "phone", "email", "avatar", "role", "status", "checkin", "details", "settings", "register_time", "is_deleted") VALUES (5, 'test', '$2a$10$3AZrcjRLF1xIHTyvFimL4.FdiVG3baNMxLpNDOT/dYfOP90IPVsBS', NULL, '123aq@qq.com', NULL, '{user}', NULL, 6, 5, 3, '2025-03-10', 'f');
 COMMIT;
 
 -- ----------------------------
@@ -214,7 +213,8 @@ COMMENT ON COLUMN "public"."db_user_checkin"."checkin_consecutive" IS '当天为
 -- Records of db_user_checkin
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."db_user_checkin" ("id", "account_id", "checkin_count", "last_checkin", "checkin_reward", "checkin_consecutive") VALUES (4, 1, 5, '2025-01-09 14:44:32+00', 249561088, 1);
+INSERT INTO "public"."db_user_checkin" ("id", "account_id", "checkin_count", "last_checkin", "checkin_reward", "checkin_consecutive") VALUES (6, 5, 1, '2025-03-10 14:31:59+00', 77594624, 1);
+INSERT INTO "public"."db_user_checkin" ("id", "account_id", "checkin_count", "last_checkin", "checkin_reward", "checkin_consecutive") VALUES (4, 1, 11, '2025-03-30 10:22:22+00', 457179136, 1);
 COMMIT;
 
 -- ----------------------------
@@ -259,9 +259,8 @@ COMMENT ON COLUMN "public"."db_user_detail"."used_storage" IS '已用存储空�
 -- Records of db_user_detail
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."db_user_detail" ("id", "account_id", "total_storage", "used_storage") VALUES (2, 2, NULL, NULL);
-INSERT INTO "public"."db_user_detail" ("id", "account_id", "total_storage", "used_storage") VALUES (3, 3, NULL, NULL);
-INSERT INTO "public"."db_user_detail" ("id", "account_id", "total_storage", "used_storage") VALUES (1, 1, 1298137088, 990852170);
+INSERT INTO "public"."db_user_detail" ("id", "account_id", "total_storage", "used_storage") VALUES (5, 5, 1126170624, 0);
+INSERT INTO "public"."db_user_detail" ("id", "account_id", "total_storage", "used_storage") VALUES (1, 1, 1505755136, 1010423800);
 COMMIT;
 
 -- ----------------------------
@@ -292,6 +291,15 @@ INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_t
 INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (4, 1, 'http://localhost:9001/api/v1/download-shared-object/aHR0cDovLzEyNy4wLjAuMTo5MDAwL3pvaS1kcml2ZS1zeXN0ZW0vbWFpbi8xL2lkZWFJVS0yMDI0LjIuZXhlP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9VklDM0Y1MkVRUFBKUzJSWU44RjglMkYyMDI0MTAxMCUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDEwMTBUMTA0NTM2WiZYLUFtei1FeHBpcmVzPTQzMjAwJlgtQW16LVNlY3VyaXR5LVRva2VuPWV5SmhiR2NpT2lKSVV6VXhNaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpoWTJObGMzTkxaWGtpT2lKV1NVTXpSalV5UlZGUVVFcFRNbEpaVGpoR09DSXNJbVY0Y0NJNk1UY3lPRFl3TURNeU9Td2ljR0Z5Wlc1MElqb2liV2x1YVc5aFpHMXBiaUo5LmhzSkJFbXNMOUVWVzF0Wi05QTZEZkpXYmhIWnJlOW13bnpQbVc4aF9BckoyWTJUNFNGLU1uMWFGMVUyVnhoWWVEZGJMRzlwVDE0OThHMW5rUUowWWFBJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZ2ZXJzaW9uSWQ9bnVsbCZYLUFtei1TaWduYXR1cmU9MjNjOTI1NGU0YmNlNThhZmEzNjYzNmZlMWY0MThhMmI2YzBjMjIxZGI4NThiODY2MmE1MjJmMDNmNDYzMjQ5OQ', 'http', NULL, 'downloading', '2024-10-10 10:58:44.749+00', '2024-10-10 10:58:44.817+00', NULL, 0);
 INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (5, 1, 'http://localhost:9001/api/v1/download-shared-object/aHR0cDovLzEyNy4wLjAuMTo5MDAwL3pvaS1kcml2ZS1zeXN0ZW0vbWFpbi8xL2lkZWFJVS0yMDI0LjIuZXhlP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9VklDM0Y1MkVRUFBKUzJSWU44RjglMkYyMDI0MTAxMCUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNDEwMTBUMTA0NTM2WiZYLUFtei1FeHBpcmVzPTQzMjAwJlgtQW16LVNlY3VyaXR5LVRva2VuPWV5SmhiR2NpT2lKSVV6VXhNaUlzSW5SNWNDSTZJa3BYVkNKOS5leUpoWTJObGMzTkxaWGtpT2lKV1NVTXpSalV5UlZGUVVFcFRNbEpaVGpoR09DSXNJbVY0Y0NJNk1UY3lPRFl3TURNeU9Td2ljR0Z5Wlc1MElqb2liV2x1YVc5aFpHMXBiaUo5LmhzSkJFbXNMOUVWVzF0Wi05QTZEZkpXYmhIWnJlOW13bnpQbVc4aF9BckoyWTJUNFNGLU1uMWFGMVUyVnhoWWVEZGJMRzlwVDE0OThHMW5rUUowWWFBJlgtQW16LVNpZ25lZEhlYWRlcnM9aG9zdCZ2ZXJzaW9uSWQ9bnVsbCZYLUFtei1TaWduYXR1cmU9MjNjOTI1NGU0YmNlNThhZmEzNjYzNmZlMWY0MThhMmI2YzBjMjIxZGI4NThiODY2MmE1MjJmMDNmNDYzMjQ5OQ', 'http', NULL, 'downloading', '2024-10-10 10:58:44.749+00', '2024-10-10 10:59:35.455+00', NULL, 0);
 INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (6, 1, 'https://placehold.co/600x400', 'http', NULL, 'downloading', '2024-10-10 14:23:47.489+00', '2024-10-10 14:23:47.565+00', NULL, 0);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (7, 1, 'https://developer-oss.lanrar.com/file/?BmAGOAw9AjMIAVdvVmNdMQY5UmpSTwZLVglUsAHdUMUDM1czDGMEZVQsU3ZRdVxzBzgEeVdtCi4GZ1Q7BTUHYwZZBjgMNQJrCGxXM1Y7XWkGblJuUj0GPFZjVHQBO1AiAz5XMgxpBGBUMFMxUT1cbgdvBCdXeAp4BjxUYAVpBzQGMwZ+DGECZQhxVzNWN11zBjpSZFJpBmZWYFQ2AT5QaANiVzUMMARmVDBTYVEwXGsHZAQwV2oKPAYwVDMFawcwBj8GaQxoAmIIZlc0VjVdaAZyUjJSdQZhVndUJwEuUDQDcVdpDDUEbVQzUzJRM1xvB2UEOFc7Ci4GdVQ7BTQHYwZgBmwMYAJhCGpXMlYxXWkGblJgUjkGNlZ/VHwBe1A3A29XdwxsBGFUNVMxUTZcbgdoBDBXOgo9BjVUdAUsB3YGcQZsDGACYQhqVzNWO11tBmhSZlI+BjFWd1QnATRQIQM+VzIMYwRjVCxTMlE2XHMHbwQwVzAKJgYwVGcFagcoBiAGNQw+AiEIMFdeVmFdNwZhUmc=', 'http', 'VHwBe1A3A29XdwxsBGFUNVMxUTZcbgdoBDBXOgo9BjVUdAUsB3YGcQZsDGACYQhqVzNWO11tBmhSZlI+BjFWd1QnATRQIQM+VzIMYwRjVCxTMlE2XHMHbwQwVzAKJgYwVGcFagcoBiAGNQw+AiEIMFdeVmFdNwZhUmc=', 'pending', '2025-03-30 16:24:17.405+00', NULL, NULL, 0);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (8, 1, 'https://developer-oss.lanrar.com/file/?BmAGOAw9AjMIAVdvVmNdMQY5UmpSTwZLVglUsAHdUMUDM1czDGMEZVQsU3ZRdVxzBzgEeVdtCi4GZ1Q7BTUHYwZZBjgMNQJrCGxXM1Y7XWkGblJuUj0GPFZjVHQBO1AiAz5XMgxpBGBUMFMxUT1cbgdvBCdXeAp4BjxUYAVpBzQGMwZ+DGECZQhxVzNWN11zBjpSZFJpBmZWYFQ2AT5QaANiVzUMMARmVDBTYVEwXGsHZAQwV2oKPAYwVDMFawcwBj8GaQxoAmIIZlc0VjVdaAZyUjJSdQZhVndUJwEuUDQDcVdpDDUEbVQzUzJRM1xvB2UEOFc7Ci4GdVQ7BTQHYwZgBmwMYAJhCGpXMlYxXWkGblJgUjkGNlZ/VHwBe1A3A29XdwxsBGFUNVMxUTZcbgdoBDBXOgo9BjVUdAUsB3YGcQZsDGACYQhqVzNWO11tBmhSZlI+BjFWd1QnATRQIQM+VzIMYwRjVCxTMlE2XHMHbwQwVzAKJgYwVGcFagcoBiAGNQw+AiEIMFdeVmFdNwZhUmc=', 'http', 'test', 'pending', '2025-03-30 16:29:20.163+00', NULL, NULL, 0);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (10, 1, 'https://developer-oss.lanrar.com/file/?AGYGOAw9UGEACQc/VmNWOlRrAjpRTApHC1QA5FOPUMVXZwVhXDMHZgJ6AicDJ1B/Um1VKAc9Ci4DYgRrU2NSNgBfBjgMNVA5AGQHY1Y7VmJUPAI+UT4KMAs+ACBTaVAiV2oFYFw5B2MCZgJgA29QYlI6VXYHKAp4AzkEMFM/UmEANQZ+DGFQNwB5B2NWN1Z4VGgCNFFqCmoLPQBiU2xQaFc2BWdcYAdlAmYCMANiUGdSMVVhBzoKPAM1BGNTPVJlADkGaQxoUDAAbgdkVjVWY1QgAmJRdgptCyoAc1N8UDRXJQU7XGUHbgJlAmMDYVBjUjBVaQdrCi4DcARrU2JSNgBmBmwMYFAzAGIHYlYxVmJUOgI2UTsKMQsiAChTKVA3VzsFJVw8B2ICYwJgA2RQYlI9VWIHago7AzwEJFN6UiMAdwZsDGBQMwBiB2NWO1ZmVDoCNlE9Cj0LKgBzU2ZQIVdqBWBcMwdgAnoCYwNkUH9SOlVhB2AKJgM1BDdTPFJ9ACYGNQw+UHMAOAcOVmFWPFQzAjc=', 'http', 'file', 'failed', '2025-03-30 16:46:08.49+00', '2025-03-30 16:46:08.515+00', '2025-03-30 16:46:08.696+00', 0);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (9, 1, 'https://developer-oss.lanrar.com/file/?BmAGOAw9AjMIAVdvVmNdMQY5UmpSTwZLVglUsAHdUMUDM1czDGMEZVQsU3ZRdVxzBzgEeVdtCi4GZ1Q7BTUHYwZZBjgMNQJrCGxXM1Y7XWkGblJuUj0GPFZjVHQBO1AiAz5XMgxpBGBUMFMxUT1cbgdvBCdXeAp4BjxUYAVpBzQGMwZ+DGECZQhxVzNWN11zBjpSZFJpBmZWYFQ2AT5QaANiVzUMMARmVDBTYVEwXGsHZAQwV2oKPAYwVDMFawcwBj8GaQxoAmIIZlc0VjVdaAZyUjJSdQZhVndUJwEuUDQDcVdpDDUEbVQzUzJRM1xvB2UEOFc7Ci4GdVQ7BTQHYwZgBmwMYAJhCGpXMlYxXWkGblJgUjkGNlZ/VHwBe1A3A29XdwxsBGFUNVMxUTZcbgdoBDBXOgo9BjVUdAUsB3YGcQZsDGACYQhqVzNWO11tBmhSZlI+BjFWd1QnATRQIQM+VzIMYwRjVCxTMlE2XHMHbwQwVzAKJgYwVGcFagcoBiAGNQw+AiEIMFdeVmFdNwZhUmc=', 'http', 'file', 'completed', '2025-03-30 16:45:15.253+00', '2025-03-30 16:45:15.332+00', '2025-03-30 16:45:15.755+00', 100);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (11, 1, 'https://developer-oss.lanrar.com/file/?AGYGOAw9UGEACQc/VmNWOlRrAjpRTApHC1QA5FOPUMVXZwVhXDMHZgJ6AicDJ1B/Um1VKAc9Ci4DYgRrU2NSNgBfBjgMNVA5AGQHY1Y7VmJUPAI+UT4KMAs+ACBTaVAiV2oFYFw5B2MCZgJgA29QYlI6VXYHKAp4AzkEMFM/UmEANQZ+DGFQNwB5B2NWN1Z4VGgCNFFqCmoLPQBiU2xQaFc2BWdcYAdlAmYCMANiUGdSMVVhBzoKPAM1BGNTPVJlADkGaQxoUDAAbgdkVjVWY1QgAmJRdgptCyoAc1N8UDRXJQU7XGUHbgJlAmMDYVBjUjBVaQdrCi4DcARrU2JSNgBmBmwMYFAzAGIHYlYxVmJUOgI2UTsKMQsiAChTKVA3VzsFJVw8B2ICYwJgA2RQYlI9VWIHago7AzwEJFN6UiMAdwZsDGBQMwBiB2NWO1ZmVDoCNlE9Cj0LKgBzU2ZQIVdqBWBcMwdgAnoCYwNkUH9SOlVhB2AKJgM1BDdTPFJ9ACYGNQw+UHMAOAcOVmFWPFQzAjc=', 'http', 'file', 'completed', '2025-03-30 16:48:43.75+00', '2025-03-30 16:48:43.832+00', '2025-03-30 16:48:44.334+00', 100);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (15, 1, 'https://developer-oss.lanrar.com/file/?VDJQbl5vU2IACQI6BjMHa1plV29STwRJBllWsl2BVsNXZwBkWjUHZgR8VnNQdFd4AD9UKV9lVHADYgdoATFTN1QLUG5eZ1M6AGQCZgZrBzNaMldrUj0EPgYzVnZdZ1YkV2oAZVo/B2MEYFY0UDxXZQBoVHdfcFQmAzkHMwFtU2BUYVAoXjNTNAB5AmYGZwcpWmZXYVJpBGQGMFY0XWJWblc2AGJaZgdlBGBWZFAxV2AAY1RgX2JUYgM1B2ABb1NkVG1QP146UzMAbgJhBmUHMlouVzdSdQRjBidWJV1yVjJXJQA+WmMHbgRjVjdQMldkAGJUaF8zVHADcAdoATBTN1QyUDpeMlMwAGICZwZhBzNaNldnUjoEMwYvVn5dJ1YxVzsAIFo6B2IEZVY0UDdXZQBvVGVfM1RlAzwHJwEoUyJUI1A6XjJTMABiAmYGawc3WjRXY1I+BDMGJ1YlXWhWJ1dqAGVaNQdgBHxWN1A3V3gAaFRgXzhUeAM1BzQBblN8VHJQY15sU3AAOAILBjEHbVo9V2I=', 'http', 'file', 'failed', '2025-03-30 17:26:26.702+00', '2025-03-30 17:26:26.72+00', '2025-03-30 17:26:26.958+00', 0);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (12, 1, 'https://developer-oss.lanrar.com/file/?AGYGOAw9UGEACQc/VmNWOlRrAjpRTApHC1QA5FOPUMVXZwVhXDMHZgJ6AicDJ1B/Um1VKAc9Ci4DYgRrU2NSNgBfBjgMNVA5AGQHY1Y7VmJUPAI+UT4KMAs+ACBTaVAiV2oFYFw5B2MCZgJgA29QYlI6VXYHKAp4AzkEMFM/UmEANQZ+DGFQNwB5B2NWN1Z4VGgCNFFqCmoLPQBiU2xQaFc2BWdcYAdlAmYCMANiUGdSMVVhBzoKPAM1BGNTPVJlADkGaQxoUDAAbgdkVjVWY1QgAmJRdgptCyoAc1N8UDRXJQU7XGUHbgJlAmMDYVBjUjBVaQdrCi4DcARrU2JSNgBmBmwMYFAzAGIHYlYxVmJUOgI2UTsKMQsiAChTKVA3VzsFJVw8B2ICYwJgA2RQYlI9VWIHago7AzwEJFN6UiMAdwZsDGBQMwBiB2NWO1ZmVDoCNlE9Cj0LKgBzU2ZQIVdqBWBcMwdgAnoCYwNkUH9SOlVhB2AKJgM1BDdTPFJ9ACYGNQw+UHMAOAcOVmFWPFQzAjc=', 'http', 'file', 'completed', '2025-03-30 17:00:24.709+00', '2025-03-30 17:00:24.73+00', '2025-03-30 17:00:25.035+00', 100);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (13, 1, 'https://yuzoi-1255554319.cos.ap-chengdu.myqcloud.com/blogimg/-5a72b1a0e92e803.png', 'http', '-5a72b1a0e92e803.png', 'completed', '2025-03-30 17:06:11.925+00', '2025-03-30 17:06:11.987+00', '2025-03-30 17:06:12.665+00', 100);
+INSERT INTO "public"."db_user_download_task" ("id", "account_id", "url", "task_type", "file_name", "status", "created_at", "started_at", "completed_at", "progress") VALUES (14, 1, 'https://developer-oss.lanrar.com/file/?AGYGOAw9UGEACQc/VmNWOlRrAjpRTApHC1QA5FOPUMVXZwVhXDMHZgJ6AicDJ1B/Um1VKAc9Ci4DYgRrU2NSNgBfBjgMNVA5AGQHY1Y7VmJUPAI+UT4KMAs+ACBTaVAiV2oFYFw5B2MCZgJgA29QYlI6VXYHKAp4AzkEMFM/UmEANQZ+DGFQNwB5B2NWN1Z4VGgCNFFqCmoLPQBiU2xQaFc2BWdcYAdlAmYCMANiUGdSMVVhBzoKPAM1BGNTPVJlADkGaQxoUDAAbgdkVjVWY1QgAmJRdgptCyoAc1N8UDRXJQU7XGUHbgJlAmMDYVBjUjBVaQdrCi4DcARrU2JSNgBmBmwMYFAzAGIHYlYxVmJUOgI2UTsKMQsiAChTKVA3VzsFJVw8B2ICYwJgA2RQYlI9VWIHago7AzwEJFN6UiMAdwZsDGBQMwBiB2NWO1ZmVDoCNlE9Cj0LKgBzU2ZQIVdqBWBcMwdgAnoCYwNkUH9SOlVhB2AKJgM1BDdTPFJ9ACYGNQw+UHMAOAcOVmFWPFQzAjc=', 'http', 'file', 'failed', '2025-03-30 17:25:40.029+00', '2025-03-30 17:25:40.11+00', '2025-03-30 17:25:40.487+00', 0);
 COMMIT;
 
 -- ----------------------------
@@ -320,6 +328,19 @@ COMMENT ON COLUMN "public"."db_user_file"."status" IS '0-回收站中 1-正常 -
 -- Records of db_user_file
 -- ----------------------------
 BEGIN;
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (156, 5, 0, '6643f08ed2c836d395da11f765a97c57.pdf', 'application/pdf', 85835, 'cf0e47bd0121a75bea146fabd989d85f', 'main/1/6643f08ed2c836d395da11f765a97c57.pdf', 'f', '2025-03-10 15:08:02.486+00', NULL, 0);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (163, 5, 0, '6643f08ed2c836d395da11f765a97c57.pdf', 'application/pdf', 85835, 'cf0e47bd0121a75bea146fabd989d85f', 'main/1/6643f08ed2c836d395da11f765a97c57.pdf', 'f', '2025-03-11 13:56:29.252+00', NULL, 0);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (157, 1, 0, '附件2：选题变更表.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 13313, '82e5c61871190659d78891677bdc09e1', 'main/1/附件2：选题变更表.docx', 'f', '2025-03-11 13:32:08.552+00', NULL, 2);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (164, 1, 0, 'file', 'text/html', 4988, '', 'downloads/1/20250331/afa2e1e4152d49d3b5ff99a113aee892/file', 'f', '2025-03-30 16:48:44.348+00', NULL, 0);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (165, 1, 0, 'file', 'text/html', 4988, '', 'downloads/1/20250331/682ed71e08134a43ba22eaac6771a86c/file', 'f', '2025-03-30 17:00:25.043+00', NULL, 0);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (158, 1, 0, '任务书.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 23781, '8fb9cfa58fad4329e4b2962c58dfb396', 'main/1/任务书.docx', 'f', '2025-03-11 13:32:08.613+00', NULL, 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (159, 1, 0, '附件9：广州应用科技学院系统操作手册2023.12.11.zip', 'application/zip', 13953744, 'ae6e1a1ee135daced25fe0a7cc39bd97', 'main/1/附件9：广州应用科技学院系统操作手册2023.12.11.zip', 'f', '2025-03-11 13:32:09.013+00', NULL, 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (166, 1, 0, '-5a72b1a0e92e803.png', 'image/png', 473693, '', 'downloads/1/20250331/3cf5254c79754ef9b0117e79a4142831/-5a72b1a0e92e803.png', 'f', '2025-03-30 17:06:12.679+00', NULL, 2);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (167, 1, 0, '测试理论基础（背诵）.md', 'text/markdown', 17190, 'a25383797882b32ec193433fd5f97fdb', 'main/1/测试理论基础（背诵）.md', 'f', '2025-03-30 17:13:01.18+00', NULL, 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (154, 1, 0, '6643f08ed2c836d395da11f765a97c57.pdf', 'application/pdf', 85835, 'cf0e47bd0121a75bea146fabd989d85f', 'main/1/6643f08ed2c836d395da11f765a97c57.pdf', 'f', '2025-02-13 14:48:53.635+00', '2025-03-10 13:07:53.231+00', 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (162, 1, 0, '开题报告.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 23978, '37a65ba43a657d5add4baed79cae8235', 'main/1/开题报告.docx', 'f', '2025-03-11 13:32:09.283+00', NULL, 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (160, 1, 14, '附件10：本科毕业设计（论文）管理工作手册.pdf', 'application/pdf', 4269953, '3f80e9276213732f15aadbd105026545', 'main/1/附件10：本科毕业设计（论文）管理工作手册.pdf', 'f', '2025-03-11 13:32:09.172+00', NULL, 1);
+INSERT INTO "public"."db_user_file" ("id", "account_id", "folder_id", "filename", "type", "size", "hash", "storage_url", "is_deleted", "upload_at", "viewed_at", "status") VALUES (161, 1, 14, '计算机学院2025届毕业设计工作要求.pdf', 'application/pdf', 700167, 'a424ff445b22aeb86fe5352f68fd383e', 'main/1/计算机学院2025届毕业设计工作要求.pdf', 'f', '2025-03-11 13:32:09.238+00', NULL, 1);
 COMMIT;
 
 -- ----------------------------
@@ -416,6 +437,24 @@ INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "
 INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (114, 1, 152, '删除文件', '2025-01-12 16:08:50.776+00', '2342AE8C-4451-42F1-859F-660A9B9715D0');
 INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (115, 1, 153, '上传文件', '2025-01-12 16:09:20.352+00', '2342AE8C-4451-42F1-859F-660A9B9715D0');
 INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (116, 1, 153, '删除文件', '2025-01-12 16:09:29.389+00', '2342AE8C-4451-42F1-859F-660A9B9715D0');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (117, 1, 154, '上传文件', '2025-02-13 14:48:53.701+00', '652A8ED2-92FB-4EE3-BF65-868E82AC39A0');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (118, 1, 154, '下载文件', '2025-03-10 13:07:53.2+00', '204CA50C-22BE-418E-8795-AE490BA6E478');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (119, 5, 155, '下载文件', '2025-03-10 14:37:48.101+00', 'D59AC42C-A763-41AD-A3CB-95BAD458A230');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (120, 1, 157, '上传文件', '2025-03-11 13:32:08.601+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (121, 1, 158, '上传文件', '2025-03-11 13:32:08.63+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (122, 1, 159, '上传文件', '2025-03-11 13:32:09.114+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (123, 1, 160, '上传文件', '2025-03-11 13:32:09.203+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (124, 1, 161, '上传文件', '2025-03-11 13:32:09.265+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (125, 1, 162, '上传文件', '2025-03-11 13:32:09.303+00', 'FC6C5206-C8D4-4484-8C81-21F784E77AF8');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (126, 1, 160, '移动文件', '2025-03-11 13:54:37.355+00', 'A24E5FEF-201C-4034-B185-FA37C082CC36');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (127, 1, 161, '移动文件', '2025-03-11 13:54:39.748+00', 'A24E5FEF-201C-4034-B185-FA37C082CC36');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (128, 5, 156, '删除文件', '2025-03-11 13:57:35.138+00', 'A24E5FEF-201C-4034-B185-FA37C082CC36');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (129, 5, 163, '删除文件', '2025-03-11 13:57:35.183+00', 'A24E5FEF-201C-4034-B185-FA37C082CC36');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (130, 1, 164, '删除文件', '2025-03-30 17:07:39.161+00', '9F348F5A-AA3E-4D31-BE36-7463E228C47F');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (131, 1, 165, '删除文件', '2025-03-30 17:07:39.183+00', '9F348F5A-AA3E-4D31-BE36-7463E228C47F');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (132, 1, 164, '删除文件', '2025-03-30 17:07:59.965+00', '9F348F5A-AA3E-4D31-BE36-7463E228C47F');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (133, 1, 165, '删除文件', '2025-03-30 17:07:59.995+00', '9F348F5A-AA3E-4D31-BE36-7463E228C47F');
+INSERT INTO "public"."db_user_file_ops" ("id", "user_id", "file_id", "action", "created_at", "uuid") VALUES (134, 1, 167, '上传文件', '2025-03-30 17:13:01.227+00', '9F348F5A-AA3E-4D31-BE36-7463E228C47F');
 COMMIT;
 
 -- ----------------------------
@@ -439,6 +478,7 @@ COMMENT ON COLUMN "public"."db_user_folder"."status" IS '0-回收站 1-正常';
 -- Records of db_user_folder
 -- ----------------------------
 BEGIN;
+INSERT INTO "public"."db_user_folder" ("id", "account_id", "parent_id", "name", "created_at", "is_deleted", "status") VALUES (14, 1, 0, 'test', '2025-03-10 13:12:32.406+00', 'f', 1);
 COMMIT;
 
 -- ----------------------------
@@ -461,6 +501,12 @@ ALTER TABLE "public"."db_user_recycle" OWNER TO "postgres";
 -- Records of db_user_recycle
 -- ----------------------------
 BEGIN;
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (14, 156, 5, '6643f08ed2c836d395da11f765a97c57.pdf', 'file', '2025-03-26 13:57:35.123+00', '2025-03-11 13:57:35.123+00');
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (15, 163, 5, '6643f08ed2c836d395da11f765a97c57.pdf', 'file', '2025-03-26 13:57:35.179+00', '2025-03-11 13:57:35.179+00');
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (16, 164, 1, 'file', 'file', '2025-04-14 17:07:39.151+00', '2025-03-30 17:07:39.151+00');
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (17, 165, 1, 'file', 'file', '2025-04-14 17:07:39.178+00', '2025-03-30 17:07:39.178+00');
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (18, 164, 1, 'file', 'file', '2025-04-14 17:07:59.956+00', '2025-03-30 17:07:59.956+00');
+INSERT INTO "public"."db_user_recycle" ("id", "tid", "uid", "name", "type", "expired_at", "create_at") VALUES (19, 165, 1, 'file', 'file', '2025-04-14 17:07:59.989+00', '2025-03-30 17:07:59.989+00');
 COMMIT;
 
 -- ----------------------------
@@ -503,28 +549,30 @@ ALTER TABLE "public"."db_user_setting" OWNER TO "postgres";
 -- Records of db_user_setting
 -- ----------------------------
 BEGIN;
-INSERT INTO "public"."db_user_setting" ("id", "account_id", "two_factor_status", "two_factor_code") VALUES (1, 3, 'f', 'GHPWLWFFMJFRUG4YWM5GKOPQKSXJ6I7G');
-INSERT INTO "public"."db_user_setting" ("id", "account_id", "two_factor_status", "two_factor_code") VALUES (2, 1, 'f', 'XDOGWIHOINVHXGWZ2H5PSWVJZUMKVS7E');
+INSERT INTO "public"."db_user_setting" ("id", "account_id", "two_factor_status", "two_factor_code") VALUES (2, 1, 't', 'WPDSAGBT5T7AAPZ47B3GNJP3EZINYRZU');
+INSERT INTO "public"."db_user_setting" ("id", "account_id", "two_factor_status", "two_factor_code") VALUES (3, 5, 'f', NULL);
 COMMIT;
 
 -- ----------------------------
--- Table structure for db_user_share
+-- Table structure for db_user_shares
 -- ----------------------------
-DROP TABLE IF EXISTS "public"."db_user_share";
-CREATE TABLE "public"."db_user_share" (
-  "id" int4 NOT NULL DEFAULT nextval('db_user_share_id_seq'::regclass),
-  "file_id" int4 NOT NULL,
-  "shared_by" int4 NOT NULL,
-  "shared_with" int4,
-  "link" varchar(255) COLLATE "pg_catalog"."default",
-  "expired_at" timestamptz(6),
-  "created_at" timestamptz(6)
+DROP TABLE IF EXISTS "public"."db_user_shares";
+CREATE TABLE "public"."db_user_shares" (
+  "id" int8 NOT NULL DEFAULT nextval('db_user_shares_id_seq'::regclass),
+  "share_code" varchar(32) COLLATE "pg_catalog"."default" NOT NULL,
+  "user_id" int8 NOT NULL,
+  "password" varchar(32) COLLATE "pg_catalog"."default",
+  "create_time" timestamp(6) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "expire_time" timestamp(6) NOT NULL,
+  "visit_count" int4 NOT NULL DEFAULT 0,
+  "download_count" int4 NOT NULL DEFAULT 0,
+  "is_deleted" bool NOT NULL DEFAULT false
 )
 ;
-ALTER TABLE "public"."db_user_share" OWNER TO "postgres";
+ALTER TABLE "public"."db_user_shares" OWNER TO "postgres";
 
 -- ----------------------------
--- Records of db_user_share
+-- Records of db_user_shares
 -- ----------------------------
 BEGIN;
 COMMIT;
@@ -558,56 +606,56 @@ COMMIT;
 -- ----------------------------
 ALTER SEQUENCE "public"."db_account_id_seq1"
 OWNED BY "public"."db_account"."id";
-SELECT setval('"public"."db_account_id_seq1"', 3, true);
+SELECT setval('"public"."db_account_id_seq1"', 5, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_checkin_id_seq"
 OWNED BY "public"."db_user_checkin"."id";
-SELECT setval('"public"."db_user_checkin_id_seq"', 4, true);
+SELECT setval('"public"."db_user_checkin_id_seq"', 6, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_detail_id_seq"
 OWNED BY "public"."db_user_detail"."id";
-SELECT setval('"public"."db_user_detail_id_seq"', 3, true);
+SELECT setval('"public"."db_user_detail_id_seq"', 5, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_download_task_id_seq"
 OWNED BY "public"."db_user_download_task"."id";
-SELECT setval('"public"."db_user_download_task_id_seq"', 6, true);
+SELECT setval('"public"."db_user_download_task_id_seq"', 15, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_file_id_seq"
 OWNED BY "public"."db_user_file"."id";
-SELECT setval('"public"."db_user_file_id_seq"', 153, true);
+SELECT setval('"public"."db_user_file_id_seq"', 167, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_file_ops_id_seq"
 OWNED BY "public"."db_user_file_ops"."id";
-SELECT setval('"public"."db_user_file_ops_id_seq"', 116, true);
+SELECT setval('"public"."db_user_file_ops_id_seq"', 134, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_folder_id_seq"
 OWNED BY "public"."db_user_folder"."id";
-SELECT setval('"public"."db_user_folder_id_seq"', 13, true);
+SELECT setval('"public"."db_user_folder_id_seq"', 14, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_recycle_id_seq"
 OWNED BY "public"."db_user_recycle"."id";
-SELECT setval('"public"."db_user_recycle_id_seq"', 13, true);
+SELECT setval('"public"."db_user_recycle_id_seq"', 19, true);
 
 -- ----------------------------
 -- Alter sequences owned by
@@ -621,14 +669,14 @@ SELECT setval('"public"."db_user_redeem_code_id_seq"', 1, false);
 -- ----------------------------
 ALTER SEQUENCE "public"."db_user_setting_id_seq"
 OWNED BY "public"."db_user_setting"."id";
-SELECT setval('"public"."db_user_setting_id_seq"', 1, true);
+SELECT setval('"public"."db_user_setting_id_seq"', 3, true);
 
 -- ----------------------------
 -- Alter sequences owned by
 -- ----------------------------
-ALTER SEQUENCE "public"."db_user_share_id_seq"
-OWNED BY "public"."db_user_share"."id";
-SELECT setval('"public"."db_user_share_id_seq"', 1, false);
+ALTER SEQUENCE "public"."db_user_shares_id_seq"
+OWNED BY "public"."db_user_shares"."id";
+SELECT setval('"public"."db_user_shares_id_seq"', 5, true);
 
 -- ----------------------------
 -- Alter sequences owned by
@@ -688,11 +736,21 @@ ALTER TABLE "public"."db_user_redeem_code" ADD CONSTRAINT "db_user_redeem_code_p
 ALTER TABLE "public"."db_user_setting" ADD CONSTRAINT "db_user_setting_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
--- Primary Key structure for table db_user_share
+-- Uniques structure for table db_user_shares
 -- ----------------------------
-ALTER TABLE "public"."db_user_share" ADD CONSTRAINT "db_user_share_pkey" PRIMARY KEY ("id");
+ALTER TABLE "public"."db_user_shares" ADD CONSTRAINT "db_user_shares_share_code_key" UNIQUE ("share_code");
+
+-- ----------------------------
+-- Primary Key structure for table db_user_shares
+-- ----------------------------
+ALTER TABLE "public"."db_user_shares" ADD CONSTRAINT "db_user_shares_pkey" PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Primary Key structure for table db_user_solution
 -- ----------------------------
 ALTER TABLE "public"."db_user_solution" ADD CONSTRAINT "db_user_solution_pkey" PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Foreign Keys structure for table db_user_shares
+-- ----------------------------
+ALTER TABLE "public"."db_user_shares" ADD CONSTRAINT "fk_db_user_shares_user" FOREIGN KEY ("user_id") REFERENCES "public"."db_account" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
