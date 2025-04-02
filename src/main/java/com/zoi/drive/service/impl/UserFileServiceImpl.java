@@ -594,6 +594,8 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     @Override
     public Result<String> previewFile(UserFile file) {
         try {
+            file.setViewedAt(new Date());
+            this.saveOrUpdate(file);
             return Result.success(
                     minioClient.getPresignedObjectUrl(
                             GetPresignedObjectUrlArgs.builder()
@@ -663,6 +665,29 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
         UserFile userFile = this.query().eq("id", fileId).one();
         userFile.setStatus(Const.FILE_NORMALCY);
         this.updateById(userFile);
+    }
+
+    @Override
+    public List<UserFile> getRecentViewedFiles(Integer accountId, int limit) {
+        // 使用MyBatis-Plus的查询构造器
+        return this.lambdaQuery()
+                .eq(UserFile::getAccountId, accountId)
+                .eq(UserFile::getIsDeleted, false)  // 不查询已删除的文件
+                .isNotNull(UserFile::getViewedAt)  // 确保有查看时间
+                .orderByDesc(UserFile::getViewedAt)  // 按查看时间降序排序
+                .last("LIMIT " + limit)  // 限制返回数量
+                .list();
+    }
+
+    @Override
+    public List<UserFile> getRecentSavedFiles(Integer accountId, int limit) {
+        // 使用MyBatis-Plus的查询构造器
+        return this.lambdaQuery()
+                .eq(UserFile::getAccountId, accountId)
+                .eq(UserFile::getIsDeleted, false)  // 不查询已删除的文件
+                .orderByDesc(UserFile::getUploadAt)  // 按上传时间降序排序
+                .last("LIMIT " + limit)  // 限制返回数量
+                .list();
     }
 
 }

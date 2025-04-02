@@ -59,4 +59,15 @@ public interface IUserFileService extends IService<UserFile> {
     void encryptFiles(List<Integer> fileIds);
 
     void decryptFiles(Integer fileIds);
+
+    List<UserFile> getRecentViewedFiles(Integer accountId, int limit);
+
+    /**
+     * 获取用户最近保存的文件
+     * 
+     * @param accountId 用户ID
+     * @param limit 限制返回的文件数量
+     * @return 最近保存的文件列表，按创建时间降序排序
+     */
+    List<UserFile> getRecentSavedFiles(Integer accountId, int limit);
 }
