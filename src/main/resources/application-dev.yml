@@ -50,10 +50,10 @@ sa-token:
   is-log: true
 
 mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
     map-underscore-to-camel-case: true
-  type-handlers-package: com.zoi.drive.handler.type
   global-config:
     db-config:
       # 逻辑删除相关配置

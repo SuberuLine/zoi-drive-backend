@@ -12,5 +12,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @since 2024-09-14
 */
 public interface AccountMapper extends BaseMapper<Account> {
-
+    Account selectById(Integer id);
 }

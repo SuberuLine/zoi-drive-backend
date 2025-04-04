@@ -30,8 +30,9 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> {
                     SaRouter.match("/**")
-                            .notMatch("/api/auth/**","/swagger-ui/**", "/image/**",
-                                    "/api/file/download/**",  "/api/file/preview/**")
+                            .notMatch("/api/auth/**","/swagger-ui/**", "/image/**", "/api/share/download/**",
+                                    "/api/file/download/**",  "/api/file/preview/**",
+                                    "/api/share/info/**", "/api/share/content/**")
                             .check(r -> StpUtil.checkLogin());
 
                     SaRouter.match("/user/**", r -> StpUtil.checkPermission(Const.DEFAULT_USER_ROLE));

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.zoi.drive.mapper.UserFileShareMapper">
+    <resultMap id="BaseResultMap" type="com.zoi.drive.entity.dto.UserFileShare">
+        <id column="id" property="id"/>
+        <result column="account_id" property="accountId"/>
+        <result column="share_code" property="shareCode"/>
+        <result column="file_ids" property="fileIds" typeHandler="com.zoi.drive.handler.type.IntegerArrayTypeHandler"/>
+        <result column="folder_ids" property="folderIds" typeHandler="com.zoi.drive.handler.type.IntegerArrayTypeHandler"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="password" property="password"/>
+        <result column="view_count" property="viewCount"/>
+        <result column="download_count" property="downloadCount"/>
+        <result column="save_count" property="saveCount"/>
+        <result column="expire_time" property="expireTime"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <!-- 基础查询语句，使用resultMap -->
+    <select id="selectByShareCode" resultMap="BaseResultMap">
+        SELECT * FROM db_user_file_share
+        WHERE share_code = #{shareCode} AND status = 0 AND is_deleted = false
+    </select>
+</mapper>
