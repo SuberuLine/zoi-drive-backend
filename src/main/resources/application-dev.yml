@@ -67,6 +67,11 @@ minio:
   secretKey: minioadmin
   bucket: zoi-drive-system
 
-aria:
-  url: http://localhost:16800/jsonrpc
-  secret: zoidrive
+alipay:
+  gateway-url:
+  app-id:
+  merchant-private-key:
+  alipay-public-key:
+  notify-url:
+  return-url:
+

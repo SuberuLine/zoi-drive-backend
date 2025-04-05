@@ -193,12 +193,6 @@ public class FileController {
         }
     }
 
-    @GetMapping("/download-magnet")
-    public Result<String> downloadMagnetLink(@RequestParam("magnet") String magnetLink) {
-        if (!RegexUtils.isMagnet(magnetLink)) return Result.failure(500, "非法的magnet格式");
-        return userFileService.downloadMagnetLink(magnetLink);
-    }
-
     @GetMapping("/offline-download")
     public Result<String> offlineDownload(@RequestParam("url") String offlineDownloadLink) {
         return userFileService.offlineDownload(offlineDownloadLink);

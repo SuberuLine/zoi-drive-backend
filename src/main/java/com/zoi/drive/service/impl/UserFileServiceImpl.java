@@ -95,12 +95,6 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
     @Value("${minio.bucket}")
     String bucketName;
 
-    @Value("${aria.url}")
-    String ariaRpcUrl;
-
-    @Value("${aria.secret}")
-    String ariaSecret;
-
     SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     @Override
@@ -444,29 +438,6 @@ public class UserFileServiceImpl extends ServiceImpl<UserFileMapper, UserFile> i
             log.error("获取预签名下载链接失败：", e);
             return null;
         }
-    }
-
-    @Override
-    public Result<String> downloadMagnetLink(String magnetLink) {
-        String jsonBody = "{\"jsonrpc\":\"2.0\",\"id\":\"qwer\",\"method\":\"aria2.addUri\",\"params\":[\"token:" +
-                ariaSecret + "\",[\"" + magnetLink + "\"]]}";
-        log.info(jsonBody);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<String> request = new HttpEntity<>(jsonBody, headers);
-        try {
-            ResponseEntity<String> response = restTemplate.postForEntity(ariaRpcUrl, request, String.class);
-            log.info(response.toString());
-            if (response.getStatusCode() == HttpStatus.OK) {
-                return Result.success("添加任务成功");
-            } else {
-                return Result.failure(500, "添加任务失败");
-            }
-        } catch (Exception e) {
-            log.error("添加任务失败：", e);
-            return Result.failure(500, "添加任务失败");
-       }
     }
 
     @Override

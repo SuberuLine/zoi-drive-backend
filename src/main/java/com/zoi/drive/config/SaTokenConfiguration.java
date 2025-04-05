@@ -32,7 +32,8 @@ public class SaTokenConfiguration implements WebMvcConfigurer {
                     SaRouter.match("/**")
                             .notMatch("/api/auth/**","/swagger-ui/**", "/image/**", "/api/share/download/**",
                                     "/api/file/download/**",  "/api/file/preview/**",
-                                    "/api/share/info/**", "/api/share/content/**")
+                                    "/api/share/info/**", "/api/share/content/**",
+                                    "/alipay/**")
                             .check(r -> StpUtil.checkLogin());
 
                     SaRouter.match("/user/**", r -> StpUtil.checkPermission(Const.DEFAULT_USER_ROLE));

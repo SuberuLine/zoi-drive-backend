@@ -40,8 +40,6 @@ public interface IUserFileService extends IService<UserFile> {
 
     Result<String> getPreSignedLink(UserFile file) throws Exception;
 
-    Result<String> downloadMagnetLink(String magnetLink);
-
     Result<String> offlineDownload(String offlineDownloadLink);
 
     Result<String> renameFile(Integer fileId, String newName);
